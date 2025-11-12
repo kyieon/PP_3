@@ -1,0 +1,8 @@
+"""
+페이지 뷰 Blueprint
+"""
+from flask import Blueprint
+
+views_bp = Blueprint('views', __name__)
+
+from . import routes
