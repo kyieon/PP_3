@@ -1,0 +1,663 @@
+{% extends "base.html" %} {% block title %}Dashboard - InfraSmart{% endblock %}
+{% block content %}
+
+<style>
+  /* 스크롤 시 부드러운 이동 */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* 네비게이션 버튼 활성화 상태 */
+  .sticky-header a.active {
+    background-color: #2c7ae0 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* 네비게이션 버튼 호버 효과 */
+  .sticky-header a:hover {
+    background-color: #2c7ae0 !important;
+    transform: translateY(-1px);
+  }
+
+  /* 스티키 헤더 스타일 */
+  .sticky-header {
+    position: sticky;
+    top: 60px;
+    z-index: 1020;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid #dee2e6;
+    padding: 12px 16px;
+    border-radius: 0;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: nowrap; /* 한 줄로 고정 */
+    gap: 10px;
+    overflow-x: auto; /* 가로 스크롤 활성화 */
+    overflow-y: hidden; /* 세로 스크롤 비활성화 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  }
+
+  /* 스크롤바 스타일링 */
+  .sticky-header::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .sticky-header::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .sticky-header::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+
+  .sticky-header::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* 부재명 버튼들이 줄바꿈되지 않도록 설정 */
+  .sticky-header a,
+  .sticky-header button {
+    flex-shrink: 0; /* 버튼 크기 축소 방지 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  }
+
+  /* 탭 네비게이션 영역 스크롤 마진 */
+  #tab-navigation {
+    scroll-margin-top: 100px;
+  }
+
+  /* 반응형 대응 - 모바일에서도 한 줄 유지 */
+  @media (max-width: 768px) {
+    .sticky-header {
+      flex-direction: row; /* 세로에서 가로로 변경 */
+      align-items: center;
+      padding: 8px 12px; /* 패딩 조정 */
+      gap: 8px; /* 간격 조정 */
+    }
+  }
+</style>
+
+<div class="dashboard-container">
+  <div class="container mt-4">
+    <h1 class="mb-4">교량 외관조사 보고서</h1>
+    <!-- 파일 업로드는 메인 페이지에서 수행 -->
+    {% if detail_html %}
+    <!-- 탭 네비게이션 -->
+    <div class="tab-buttons" id="tab-navigation">
+      <button class="tab-button active" data-tab="detail">부재별 집계표</button>
+      <button class="tab-button" data-tab="overall">외관조사 총괄표</button>
+      <button class="tab-button" data-tab="repair">보수물량표</button>
+      <button class="tab-button" data-tab="cost">개략공사비표</button>
+    </div>
+    <!-- 탭 콘텐츠 -->
+    <div class="tab-content active" id="detail">
+      <div class="d-flex justify-content-end mb-3">
+        <button type="button" id="btn_pivot" class="btn btn-warning">
+          경간위치 변경
+        </button>
+        &nbsp;
+        <button type="button" id="btn_crack_detail" class="btn btn-info">
+          균열 세분화
+        </button>
+        &nbsp; &nbsp;
+        <a
+          class="btn btn-success"
+          href="javascript:void(0)"
+          id="downloadDetail"
+        >
+          Word 다운로드
+        </a>
+      </div>
+
+      <div class="card mb-4 sticky-container">
+        <div class="card-header sticky-header">
+          <h5 style="display: inline; width: 100%">부재별 집계표</h5>
+          {{ detail_html_header_link | safe }}
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="table-responsive" id="detail_html">
+                {{ detail_html | safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="overall">
+      <div class="d-flex justify-content-end mb-3">
+        <a
+          class="btn btn-success"
+          href="javascript:void(0)"
+          id="downloadOverall"
+        >
+          Word 다운로드
+        </a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>외관조사 총괄표</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="table-responsive" id="overall_html">
+                {{ overall_html | safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="repair">
+      <div class="d-flex justify-content-end mb-3">
+        <a
+          class="btn btn-success"
+          href="javascript:void(0)"
+          id="downloadRepair"
+        >
+          Word 다운로드
+        </a>
+      </div>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>보수물량표</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="table-responsive" id="repair_html">
+                {{ repair_html | safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="cost">
+      <div class="d-flex justify-content-end mb-3">
+        <a class="btn btn-success" href="javascript:void(0)" id="downloadCost">
+          Word 다운로드
+        </a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>개략공사비표</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="table-responsive" id="cost_html">
+                {{ cost_html | safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% endif %}
+    <div class="download-buttons" style="margin-top: 20px; text-align: center">
+      <a class="btn btn-primary" id="printDetail" href="javascript:void(0)">
+        부재별 집계표 다운로드
+      </a>
+      <a class="btn btn-primary" id="printOverall" href="javascript:void(0)">
+        외관조사 총괄표 다운로드
+      </a>
+      <a class="btn btn-primary" id="printRepair" href="javascript:void(0)">
+        보수물량표 다운로드
+      </a>
+      <a class="btn btn-primary" id="printCost" href="javascript:void(0)">
+        개략공사비표 다운로드
+      </a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // jQuery가 로드될 때까지 기다리는 함수
+      function waitForJQuery(callback) {
+        if (typeof $ !== "undefined") {
+          callback();
+        } else {
+          setTimeout(function () {
+            waitForJQuery(callback);
+          }, 100);
+        }
+      }
+
+      pageSize = "A4"; // A4 용지 크기 설정
+      landscape = false;
+
+      // jQuery 로드 후 printCost 이벤트 바인딩
+      waitForJQuery(function () {
+        // 각 탭의 Word 다운로드 버튼 이벤트
+        $("#downloadDetail").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = true; // 가로 모드
+          printWord("detail", "부재별 집계표 다운로드");
+        });
+
+        $("#downloadOverall").on("click", function () {
+          pageSize = "A4"; // A4 용지 크기 설정
+          landscape = false; // 세로 모드
+          $("#overall-table-header").remove();
+          $("#overall-print-table-header").show();
+          printWord("overall", "외관조사 총괄표 다운로드");
+        });
+
+        $("#downloadRepair").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = true; // 가로 모드
+          printWord("repair", "보수물량표 다운로드");
+        });
+
+        $("#downloadCost").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = true; // 가로 모드
+          printWord("cost", "개략공사비표 다운로드");
+        });
+
+        // 하단 다운로드 버튼들
+        $("#printRepair").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = false; // 가로 모드
+          printWord("repair", "보수물량표 다운로드");
+        });
+        $("#printOverall").on("click", function () {
+          pageSize = "A4"; // A4 용지 크기 설정
+          landscape = false; // 세로 모드
+
+          $("#overall-table-header").remove();
+          $("#overall-print-table-header").show();
+          printWord("overall", "외관조사 총괄표 다운로드");
+
+          //$("#overall-table-header").show(); // Remove the header before printing
+          //$("#overall-print-table-header").hide();
+        });
+        $("#printDetail").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = true; // 가로 모드
+
+          printWord("detail", "부재별 집계표 다운로드");
+        });
+        $("#printCost").on("click", function () {
+          pageSize = "A3"; // A3 용지 크기 설정
+          landscape = false; // 가로 모드
+          printWord("cost", "개략공사비표 다운로드");
+        });
+
+        function printWord(target, title) {
+          var $clone = $("#" + target + "_html").clone();
+          $clone.find("button, .btn").remove(); // 모든 버튼 제거
+
+          // input 요소들을 텍스트로 변환
+          $clone.find("input").each(function () {
+            var $input = $(this);
+            var value = $input.val();
+            $input.replaceWith($("<span>").text(value));
+          });
+
+          // 2. HTML 추출
+          var tableHtml = $clone[0].outerHTML;
+
+          // Word로 내보내기 전에 모든 th/td에 width 속성 추가
+          $("#" + target + "_html table").each(function () {
+            var $ths = $(this).find("th");
+            var colCount = $ths.length;
+            if (colCount > 0) {
+              var width = Math.floor(100 / colCount) + "%";
+              $ths.each(function () {
+                $(this).css("width", width);
+              });
+              $(this)
+                .find("td")
+                .each(function () {
+                  $(this).css("width", width);
+                });
+            }
+          });
+
+          // pageSize에 따른 페이지 크기 설정
+          var pageSizeSettings = {
+            A4: {
+              landscape: {
+                size: "297mm 210mm",
+                tableWidth: "90%",
+                fontSize: "9pt",
+                headerFontSize: "8pt",
+              },
+              portrait: {
+                size: "210mm 297mm",
+                tableWidth: "85%",
+                fontSize: "10pt",
+                headerFontSize: "9pt",
+              },
+            },
+            A3: {
+              landscape: {
+                size: "420mm 297mm",
+                tableWidth: "95%",
+                fontSize: "8pt",
+                headerFontSize: "7pt",
+              },
+              portrait: {
+                size: "297mm 420mm",
+                tableWidth: "90%",
+                fontSize: "9pt",
+                headerFontSize: "8pt",
+              },
+            },
+            A2: {
+              landscape: {
+                size: "594mm 420mm",
+                tableWidth: "98%",
+                fontSize: "7pt",
+                headerFontSize: "6pt",
+              },
+              portrait: {
+                size: "420mm 594mm",
+                tableWidth: "95%",
+                fontSize: "8pt",
+                headerFontSize: "7pt",
+              },
+            },
+            LEGAL: {
+              landscape: {
+                size: "356mm 216mm",
+                tableWidth: "92%",
+                fontSize: "8pt",
+                headerFontSize: "7pt",
+              },
+              portrait: {
+                size: "216mm 356mm",
+                tableWidth: "87%",
+                fontSize: "9pt",
+                headerFontSize: "8pt",
+              },
+            },
+          };
+
+          var currentPageSize =
+            typeof pageSize !== "undefined" ? pageSize : "A4";
+          var currentLandscape =
+            typeof landscape !== "undefined" ? landscape : true;
+          var orientation = currentLandscape ? "landscape" : "portrait";
+          var settings = pageSizeSettings[currentPageSize]
+            ? pageSizeSettings[currentPageSize][orientation]
+            : pageSizeSettings["A4"]["landscape"];
+
+          // Word 파일용 HTML 래퍼 (Microsoft Office XML 네임스페이스 포함)
+          var preHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office'
+              xmlns:w='urn:schemas-microsoft-com:office:word'
+              xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'> <title>${title}</title>
+          <style>
+            @page Section1 {
+              size: ${settings.size};
+              mso-page-orientation: ${
+                currentLandscape ? "landscape" : "portrait"
+              };
+              margin: 0.4in 0.2in 0.4in 0.2in;
+            }
+            div.Section1 {
+              page: Section1;
+              width: 100%;
+              margin: 0;
+              padding: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 98%;
+            }
+            table {
+              border-collapse: collapse;
+              width: ${settings.tableWidth};
+              table-layout: fixed;
+              margin: 0 auto;
+              font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif;
+            }
+            th, td {
+              border: 1px solid #333;
+              padding: 3px 2px;
+              font-size: ${settings.fontSize};
+              text-align: center;
+              vertical-align: middle;
+              word-wrap: break-word;
+            }
+            th {
+              background: #e9ecef;
+              font-size: ${settings.headerFontSize};
+              font-weight: bold;
+            }
+            .bg-primary { background: #0d6efd !important; color: #fff !important; }
+            .text-white { color: #fff !important; }
+            .card {
+              border: none;
+              margin: 0;
+              padding: 0;
+              width: 100%;
+            }
+            .card-header {
+              font-weight: bold;
+              padding: 0.3rem 0.5rem;
+              font-size: 10pt;
+              background: #f8f9fa;
+              border-bottom: 1px solid #dee2e6;
+              text-align: center;
+            }
+            .card-body {
+              padding: 0;
+              margin: 0;
+            }
+            .btn { display: none; }
+            .table-responsive {
+              overflow: visible;
+              width: 100%;
+            }
+            .cost-amount { text-align: right; }
+            .table-primary { background-color: #b3d7ff !important; }
+          </style>
+          <!-- Word orientation -->
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+              <w:Orientation>${
+                currentLandscape ? "Landscape" : "Portrait"
+              }</w:Orientation>
+            </w:WordDocument>
+          </xml>
+        </head><body><div class="Section1">
+                            `;
+
+          var postHtml = `
+                      </div>
+                    </body>
+                    </html>`;
+
+          var html = preHtml + tableHtml + postHtml;
+
+          // Word 문서로 다운로드 (BOM 추가하여 인코딩 문제 해결)
+          var blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), html], {
+            type: "application/msword;charset=utf-8",
+          });
+
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download =
+            title + "_" + new Date().toISOString().slice(0, 10) + ".doc";
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+
+          setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+        }
+      });
+    });
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+  >
+       document.getElementById("updateRepairBtn")?.addEventListener("click", function() {
+        const rows = document.querySelectorAll("#repair .repair-table tbody tr");
+        const repairData = [];
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const component = cells[0].textContent;
+            const damage = cells[1].textContent;
+            const quantity = parseFloat(cells[3].textContent);
+            const count = parseInt(cells[4].textContent);
+            const method = row.querySelector("input[name^='repair_method_']").value;
+            const priority = row.querySelector("input[name^='priority_']").value;
+            const unitPrice = parseFloat(row.querySelector("input[name^='unit_price_']").value);
+
+            repairData.push({
+                component, damage, quantity, count,
+                repairMethod: method, priority, unitPrice
+            });
+        });
+
+        fetch("/data/update_repair", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(repairData)
+        })
+        .then(res => res.json())
+        .then data => {
+            document.querySelector("#cost .table-responsive").innerHTML = data.cost_table + data.cost_summary;
+        });
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='js/index_re.js') }}"></script>
+
+  <script>
+    // 현재 파일명을 JavaScript 변수로 설정
+    window.currentFilename = "{{ filename }}";
+  </script>
+</div>
+
+<style>
+  h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2em;
+  }
+
+  .upload-section {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    color: #34495e;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    margin-bottom: 8px;
+    color: #34495e;
+    font-weight: bold;
+  }
+
+  input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+  }
+
+  .upload-btn {
+    background-color: #2c3e50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+  }
+
+  .upload-btn:hover {
+    background-color: #34495e;
+  }
+
+  .analysis-results,
+  .data-table {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+  }
+
+  .analysis-results h2,
+  .data-table h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+
+  tr:hover {
+    background-color: #f9f9f9;
+  }
+
+  .sticky-header {
+    position: sticky;
+    top: 60px;
+    z-index: 1020;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  /* 카드 전체를 sticky container로 설정 */
+  .card.sticky-container {
+    position: relative;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,370 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --background-color: #f8f9fa;
+    --text-color: #2c3e50;
+    --border-color: #dee2e6;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+}
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1800px;
+    margin: 0 auto;
+    /*  padding: 20px;*/
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px 0;
+}
+
+.header h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 2.5rem;
+}
+
+.subtitle {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.upload-section {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+}
+
+.upload-form {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.form-group {
+    flex: 1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    vertical-align: middle;
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    text-align: center;
+}
+
+.table thead th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(44, 62, 80, 0.02);
+}
+
+.table-bordered {
+    border: 1px solid var(--border-color);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+/* 보수물량표 입력칸 스타일 */
+.table input.form-control {
+    text-align: center;
+    width: 100px;
+    min-width: 80px;
+    height: 30px;
+    padding: 4px 8px;
+    font-size: 13px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* 보수물량표 셀 너비 조정 */
+.table td:has(input) {
+    width: 120px;
+    max-width: 120px;
+    white-space: nowrap;
+}
+
+/* 부재별 집계표 첫 번째 열 숨김 */
+.table-bordered th:first-child,
+.table-bordered td:first-child {
+    /* display: none; */
+}
+
+/* 전체 집계표, 보수물량표, 개략공사비표는 모든 열 표시 */
+.table-striped th:first-child,
+.table-striped td:first-child {
+    display: table-cell;
+}
+
+/* 탭 스타일 */
+.nav-tabs {
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+    color: var(--secondary-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--accent-color);
+    border: none;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--accent-color);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.tab-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 버튼 스타일 */
+.btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+    transform: translateY(-1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+.table th:first-child,
+.table td:first-child {
+    /* display: none; */
+}
+
+/* 두 번째 열 숨김 제거 */
+/*.table th:nth-child(2),
+.table td:nth-child(2) {
+    display: none;
+}*/
+
+.table-bordered th:first-child,
+.table-bordered td:first-child {
+    /* display: none; */
+}
+
+/* 전체 집계표, 보수물량표, 개략공사비표는 모든 열 표시 */
+.table-striped th:first-child,
+.table-striped td:first-child {
+    display: table-cell;
+}
+
+/* input 요소도 가운데 정렬 */
+.table input.form-control {
+    text-align: center;
+    width: 100px;
+    min-width: 80px;
+    height: 30px;
+    padding: 4px 8px;
+    font-size: 13px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* 보수물량표 셀 너비 조정 */
+.table td:has(input) {
+    width: 120px;
+    max-width: 120px;
+    white-space: nowrap;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.tab-button:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.tab-button.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    background-color: white;
+    border-radius: 0 5px 5px 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.cost-amount {
+    text-align: right;
+    max-width: 100px;
+}
+
+.total-cost {
+    text-align: right;
+    max-width: 100px;
+}
+
+/* 보수물량표 열별 정렬 */
+.repair-table th:nth-child(7),  /* 보수방안 열 */
+.repair-table td:nth-child(7) {
+    text-align: center;
+}
+
+.repair-table th:nth-child(8),  /* 우선순위 열 */
+.repair-table td:nth-child(8) {
+    text-align: center;
+}
+
+.repair-table th:nth-child(9),  /* 단가 열 */
+.repair-table td:nth-child(9) {
+    text-align: right;
+}
+
+/* 보수물량표 input 요소 정렬 */
+.repair-table input[name*="repair_method"] {
+    text-align: center;
+}
+
+.repair-table input[name*="priority"] {
+    text-align: center;
+}
+
+.repair-table input[name*="unit_price"] {
+    text-align: right;
+}
+
+/* 개략공사비표 열별 정렬 */
+.cost-table th:nth-child(5),  /* 보수물량 열 */
+.cost-table td:nth-child(5) {
+    text-align: center;
+}
+
+.cost-table th:nth-child(6),  /* 개소 열 */
+.cost-table td:nth-child(6) {
+    text-align: center;
+}
+
+.cost-table th:nth-child(7),  /* 단가 열 */
+.cost-table td:nth-child(7) {
+    text-align: right;
+}
+
+.cost-table th:nth-child(8),  /* 개략공사비 열 */
+.cost-table td:nth-child(8) {
+    text-align: right;
+}

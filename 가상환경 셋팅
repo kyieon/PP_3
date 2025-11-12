@@ -1,0 +1,19 @@
+/usr/local/bin/python3.12 -m pip install --user pandas
+
+/usr/local/bin/python3.12 -m venv venv
+
+source venv/bin/activate
+
+skpark@m1ui-MacBookAir ~ % psql -d postgres
+
+psql (14.17 (Homebrew))
+Type "help" for help.
+
+postgres=# \l
+
+
+
+postgres-# psql -U infrasmart -d infrasmart
+모든수정사항 무시하고 서버에서 받아옴
+git fetch origin
+git reset --hard origin/main

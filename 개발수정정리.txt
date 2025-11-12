@@ -1,0 +1,22 @@
+1. 저장버튼 처리시 파일정보를 저장하는 파일명이 다름  unnamed_file  로저장됨
+2. 
+ cur.execute('''
+        SELECT component_name, damage_description, repair_method, priority,
+               repair_quantity, count, unit_price, estimated_cost
+        FROM file_damage_details
+        WHERE user_id = %s AND filename != %s
+    ''', (session['user_id'], filename))
+ 부분 filename 처리 필요 \
+
+ 파일 저장 처리 후 개략공사비 스크립트에서 서버로 불러와서 화면에 로드하는 개발 필요
+
+ getData() 메소드 호출 
+ @app.route('/getData', methods=['GET', 'POST'])
+cost_html 받아서 화면에 전달 
+
+https://liebe97.tistory.com/10
+
+source 가상환경이름/Scripts/activate
+deactivate
+
+. ./venv/bin/activate

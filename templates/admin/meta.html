@@ -1,0 +1,403 @@
+<!-- filepath: /Users/skpark/dev/git/infrasmart/templates/admin/meta.html -->
+<!-- head 또는 body 끝에 한 번만! -->
+
+{% extends "admin/admin.html" %} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css"
+/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+
+<div class="row">
+  <div class="col-3">
+    <!-- 트리구조: 구분/구분2 -->
+    <div id="metaTree"></div>
+    <script>
+      $(document).ready(function () {
+        let metaList = [];
+        let selectedCategory = ""; // 트리에서 선택된 구분 값
+
+        // 트리 데이터 변환 (jsTree 형식)
+        function toJsTree(nodes) {
+          return nodes.map(function (node) {
+            return {
+              id: node.id,
+              text: node.keyword ? node.keyword : node.category,
+              data: {
+                category: node.category,
+                keyword: node.keyword,
+                description: node.description,
+              },
+              children: toJsTree(node.children || []),
+            };
+          });
+        }
+
+        // 메타 트리 데이터 불러오기 (API 연동)
+        $.getJSON("/api/damage_meta/tree", function (treeData) {
+          $("#metaTree").jstree({
+            core: {
+              data: toJsTree(treeData),
+              check_callback: true, // 노드 추가/삭제 허용
+            },
+            plugins: ["contextmenu"],
+            contextmenu: {
+              items: function (node) {
+                return {
+                  Create: {
+                    label: "하위 추가",
+                    action: function () {
+                      var tree = $("#metaTree").jstree(true);
+                      // 1. 새 노드 추가(임시)
+                      var newNode = tree.create_node(
+                        node,
+                        { text: "새 항목" },
+                        "last"
+                      );
+                      // 2. 이름 편집 시작
+                      tree.edit(newNode);
+
+                      // 3. 이름 편집이 끝나면 서버에 POST 요청
+                      $("#metaTree").one(
+                        "rename_node.jstree",
+                        function (e, data) {
+                          // data.node.text: 입력된 이름
+                          $.ajax({
+                            url: "/api/damage_meta",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                              category: "", // 필요시 부모 category 등 전달
+                              keyword: data.node.text,
+                              description: "",
+                              parent_id:
+                                data.node.parent === "#"
+                                  ? null
+                                  : data.node.parent,
+                              use_yn: "Y",
+                            }),
+                            success: function (res) {
+                              // 서버에서 받은 id로 노드 id 갱신
+                              tree.set_id(data.node, res.id);
+                            },
+                            error: function () {
+                              alert("노드 추가에 실패했습니다.");
+                              tree.delete_node(data.node);
+                            },
+                          });
+                        }
+                      );
+                    },
+                  },
+                  Delete: {
+                    label: "삭제",
+                    action: function () {
+                      var tree = $("#metaTree").jstree(true);
+                      // 실제 삭제 전 사용자 확인
+                      if (confirm("정말 삭제하시겠습니까?")) {
+                        // 서버에 DELETE 요청
+                        $.ajax({
+                          url: "/api/damage_meta/" + node.id,
+                          type: "DELETE",
+                          success: function (res) {
+                            tree.delete_node(node); // 성공 시 트리에서 삭제
+                          },
+                          error: function () {
+                            alert("삭제에 실패했습니다.");
+                          },
+                        });
+                      }
+                    },
+                  },
+                };
+              },
+            },
+          });
+
+          // 트리 1단계 자동 펼치기
+          $("#metaTree").on("ready.jstree", function (e, data) {
+            // 최상위 노드들 모두 open
+            var tree = $("#metaTree").jstree(true);
+            tree.get_node("#").children.forEach(function (childId) {
+              tree.open_node(childId);
+            });
+          });
+
+          // 트리 노드 클릭 시 meta_keyword 목록을 metaList에 반영하고 그리드 갱신
+          $("#metaTree").on("select_node.jstree", function (e, data) {
+            var node = data.node;
+            var meta = node.data || {};
+            $("#metaId").val(node.id);
+            $("#metaCategory").val(meta.category || "");
+            $("#metaSubCategory").val(""); // 필요시 부모 값 등으로 채우기
+            $("#metaKeyword").val(meta.keyword || "");
+            $("#metaDescription").val(meta.description || "");
+            selectedCategory = meta.keyword || meta.category || "";
+
+            // meta_keyword 목록 조회 (meta_id=노드id)
+            $.getJSON(
+              "/api/meta_keyword?meta_id=" + node.id,
+              function (keywordList) {
+                // keywordList를 metaList로 복사
+                metaList = keywordList.map(function (row) {
+                  return {
+                    id: row.id,
+                    category: selectedCategory,
+                    item: row.keyword,
+                    include: row.use_yn,
+                    source: row.source,
+                    file: row.file || "",
+                    line: row.line || "",
+                    etc: row.etc || "",
+                  };
+                });
+                renderGrid(); // 그리드 갱신
+              }
+            );
+          });
+        });
+
+        function renderGrid() {
+          const $tbody = $("#metaGrid tbody");
+          $tbody.empty();
+          metaList.forEach((row) => {
+            $tbody.append(`
+              <tr data-id="${row.id}">
+                <td><input type="checkbox" class="rowCheck"></td>
+                <td><input type="text" style="width:150px;text-align:left" class="form-control form-control-sm" value="${
+                  row.category
+                }" readonly></td>
+                <td><input type="text" style="width:150px;text-align:left" class="form-control form-control-sm" value="${
+                  row.item
+                }"></td>
+                <td>
+                  <select class="form-select form-select-sm">
+                    <option value="Y" ${
+                      row.include === "Y" ? "selected" : ""
+                    }>Y</option>
+                    <option value="N" ${
+                      row.include === "N" ? "selected" : ""
+                    }>N</option>
+                  </select>
+                </td>
+                <td><input type="text" style="width:200px;text-align:left" class="form-control form-control-sm" value="${
+                  row.source || ""
+                }"></td>
+                <td><input type="text" style="width:100px;text-align:left" class="form-control form-control-sm" value="${
+                  row.file || ""
+                }"></td>
+                <td><input type="text" style="width:100px;text-align:left" class="form-control form-control-sm" value="${
+                  row.line || ""
+                }"></td>
+                <td><input type="text" style="width:100px;text-align:left" class="form-control form-control-sm" value="${
+                  row.etc || ""
+                }"></td>
+              </tr>
+            `);
+          });
+        }
+
+        // 전체 체크박스
+        $("#metaGrid").on("change", "#checkAll", function () {
+          $(".rowCheck").prop("checked", this.checked);
+        });
+
+        // 행 추가: 트리에서 선택한 구분값을 자동 입력
+        $("#addRowBtn").click(function () {
+          $("#metaGrid tbody tr").each(function (i, tr) {
+            const $tr = $(tr);
+            metaList[i] = {
+              id: metaList[i] ? metaList[i].id : null,
+              category: $tr.find("td:eq(1) input").val(),
+              item: $tr.find("td:eq(2) input").val(),
+              include: $tr.find("td:eq(3) select").val(),
+              source: $tr.find("td:eq(4) input").val(),
+              file: $tr.find("td:eq(5) input").val(),
+              line: $tr.find("td:eq(6) input").val(),
+              etc: $tr.find("td:eq(7) input").val(),
+            };
+          });
+
+          metaList.push({
+            id: "",
+            category: selectedCategory, // 트리에서 선택한 값
+            item: "",
+            include: "Y",
+            source: "",
+            file: "",
+            line: "",
+            etc: "",
+          });
+          renderGrid();
+        });
+
+        // 전체 저장
+        $("#saveAllBtn").click(function () {
+          // 1. 테이블에서 모든 행의 값을 metaList에 반영
+          $("#metaGrid tbody tr").each(function (i, tr) {
+            const $tr = $(tr);
+            metaList[i] = {
+              id: metaList[i] ? metaList[i].id : null,
+              category: $tr.find("td:eq(1) input").val(),
+              item: $tr.find("td:eq(2) input").val(),
+              include: $tr.find("td:eq(3) select").val(),
+              source: $tr.find("td:eq(4) input").val(),
+              file: $tr.find("td:eq(5) input").val(),
+              line: $tr.find("td:eq(6) input").val(),
+              etc: $tr.find("td:eq(7) input").val(),
+            };
+          });
+
+          // 2. metaList를 meta_keyword 형식으로 변환
+          // (category → meta_id, item → keyword, include → use_yn, source 그대로)
+          const metaId = $("#metaId").val(); // 트리에서 선택된 meta_id
+          alert("전체 저장 버튼 클릭: " + metaId);
+          const keywordList = metaList.map((row) => ({
+            id: row.id,
+            keyword: row.item,
+            use_yn: row.include,
+            source: row.source,
+            meta_id: metaId,
+            file: row.file,
+            line: row.line,
+            etc: row.etc,
+          }));
+
+          // 3. 서버로 일괄 저장 요청 (예: /api/meta_keyword/bulk, POST)
+          $.ajax({
+            url: "/api/meta_keyword/bulk",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ keywords: keywordList }),
+            success: function (res) {
+              alert("전체 저장되었습니다.");
+              // 필요시 트리/그리드 갱신
+            },
+            error: function () {
+              alert("저장에 실패했습니다.");
+            },
+          });
+        });
+
+        // 선택 삭제 버튼 클릭 시 체크된 행만 삭제
+        $("#deleteSelectedBtn").click(function () {
+          // 1. 체크된 행의 id 목록 추출
+          const idsToDelete = [];
+          $("#metaGrid tbody tr").each(function () {
+            if ($(this).find(".rowCheck").is(":checked")) {
+              idsToDelete.push($(this).data("id"));
+              $(this).remove();
+            }
+          });
+
+          // 2. metaList에서 해당 id를 가진 데이터 삭제
+          metaList = metaList.filter((row) => !idsToDelete.includes(row.id));
+
+          // 3. 그리드 갱신
+          //renderGrid();
+
+          // 4. 서버에도 삭제(사용안함 처리) 요청
+          idsToDelete.forEach(function (id) {
+            $.ajax({
+              url: "/api/meta_keyword/" + id,
+              type: "DELETE",
+            });
+          });
+        });
+
+        renderGrid();
+      });
+    </script>
+  </div>
+
+  <div class="col-8">
+    <form id="metaKeywordForm">
+      <!-- 키워드 목록 및 관리  
+ 
+      <table
+        class="table table-bordered align-middle mb-3"
+        style="width: auto; min-width: 600px"
+      >
+        <tbody>
+          <tr>
+            <th style="width: 80px; background-color: #343a40; color: #fff">
+              구분
+            </th>
+
+            <th style="background-color: #343a40; color: #fff">값</th>
+            <th style="background-color: #343a40; color: #fff">설명</th>
+          </tr>
+          <tr>
+            <td>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                id="metaCategory"
+                placeholder="구분"
+              />
+            </td>
+
+            <td>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                id="metaKeyword"
+                placeholder="값"
+              />
+            </td>
+
+            <td>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                id="metaDescription"
+                placeholder="설명"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mb-2">
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+      <hr />
+  -->
+      <h5>메타 데이터 관리</h5>
+      <p>메타 데이터는 손상 내용, 구분, 키워드 등을 관리합니다.</p>
+      <div class="mb-5">
+        <div class="d-flex justify-content-end gap-2 mb-2">
+          메타ID <input type="text" id="metaId" readonly />
+
+          <button type="button" class="btn btn-success" id="addRowBtn">
+            + 행 추가
+          </button>
+          <button type="button" class="btn btn-primary" id="saveAllBtn">
+            전체 저장
+          </button>
+          <button type="button" class="btn btn-danger" id="deleteSelectedBtn">
+            선택 삭제
+          </button>
+        </div>
+        <table style="width: 1300px" class="table table-bordered" id="metaGrid">
+          <thead>
+            <tr>
+              <th width="50px"><input type="checkbox" id="checkAll" /></th>
+              <th width="200px">구분</th>
+              <th width="200px">항목</th>
+              <th width="100px">포함여부</th>
+              <th width="300px">소스</th>
+              <th width="150px">파일</th>
+              <th width="100px">라인</th>
+              <th width="200px">비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 데이터 행이 여기에 동적으로 추가됩니다 -->
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

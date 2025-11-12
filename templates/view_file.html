@@ -1,0 +1,11 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h2>{{ filename }}</h2>
+  <div class="table-responsive">{{ table_html | safe }}</div>
+  <div class="mt-3">
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary"
+      >목록으로 돌아가기</a
+    >
+  </div>
+</div>
+{% endblock %}

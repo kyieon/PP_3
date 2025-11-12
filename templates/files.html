@@ -1,0 +1,761 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-12">
+      <!-- 업로드된 파일 목록 섹션 -->
+      <div class="card shadow-sm mb-4">
+        <div
+          class="card-header bg-info text-white d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">업로드된 파일 목록</h5>
+          <button
+            class="btn btn-light btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#uploadModal"
+            onclick="clearForm()"
+          >
+            <i class="fas fa-plus"></i> 추가
+          </button>
+        </div>
+        <div class="card-body">
+          {% if files %}
+          <div
+            class="table-responsive"
+            style="max-height: 1000px; overflow-y: auto"
+          >
+            <table class="table table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th style="min-width: 150px">교량명</th>
+                  <th style="min-width: 180px">파일명</th>
+                  <th style="min-width: 150px">업로드시간</th>
+                  <th style="min-width: 150px">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for file in files %}
+                <tr>
+                  <td>{{ file.bridge_name or '-' }}</td>
+                  <td>{{ file.original_filename or file.filename }}</td>
+                  <td>{{ file.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                  <td>
+                    <a
+                      style="display: none"
+                      href="{{ url_for('file_management.view_file', filename=file.filename) }}"
+                      class="btn btn-primary btn-sm"
+                    >
+                      <i class="fas fa-eye"></i> 보기
+                    </a>
+                    <!-- 편집 버튼을 새로운 모달로 변경 -->
+                    <button
+                      type="button"
+                      class="btn btn-warning btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editModal"
+                      onclick="openEditModal('{{ file.filename }}', '{{ file.bridge_name }}', '{{ file.structure_type }}', {{ file.span_count }}, {{ file.length }}, {{ file.width }})"
+                    >
+                      <i class="fas fa-edit"></i> 편집
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm delete-file-btn"
+                      data-filename="{{ file.filename }}"
+                      onclick="if(!confirm('정말로 삭제하시겠습니까?')) return; deleteFileAjax(this);"
+                    >
+                      <i class="fas fa-trash"></i> 삭제
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <p class="text-muted">업로드된 파일이 없습니다.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 입력 폼 모달 -->
+<div
+  class="modal fade"
+  id="uploadModal"
+  tabindex="-1"
+  aria-labelledby="uploadModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title mx-auto" id="uploadModalLabel">파일 업로드</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          action="{{ url_for('main.index') }}"
+          method="post"
+          enctype="multipart/form-data"
+          id="uploadForm"
+        >
+          <div class="mb-3">
+            <label for="bridge_name" class="form-label">교량명</label>
+            <input
+              type="text"
+              class="form-control"
+              name="bridge_name"
+              id="bridge_name"
+              placeholder="교량명을 입력하세요"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="structure_type" class="form-label">구조형식</label>
+            <select
+              class="form-select"
+              name="structure_type"
+              id="structure_type"
+              required
+            >
+              <option value="">구조형식을 선택하세요</option>
+              <!-- 기존 하드코딩된 옵션들 제거, API에서 동적으로 로드됨 -->
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="span_count" class="form-label">경간 수</label>
+              <input
+                type="number"
+                class="form-control"
+                name="span_count"
+                id="span_count"
+                min="1"
+                placeholder="경간 수"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="length" class="form-label">연장(m)</label>
+              <input
+                type="number"
+                class="form-control"
+                name="length"
+                id="length"
+                step="0.1"
+                min="0"
+                placeholder="연장"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="width" class="form-label">폭(m)</label>
+              <input
+                type="number"
+                class="form-control"
+                name="width"
+                id="width"
+                step="0.1"
+                min="0"
+                placeholder="폭"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="mb-3" style="display: none">
+            <label for="expansion_joint_location" class="form-label"
+              >신축이음 위치</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="expansion_joint_location"
+              id="expansion_joint_location"
+              placeholder="예: A1, P1, P2, A2"
+            />
+          </div>
+
+          <div id="fileInputContainer" class="mb-3">
+            <label for="file" class="form-label">파일 선택</label>
+            <input
+              type="file"
+              class="form-control"
+              name="file"
+              id="file"
+              accept=".xlsx"
+            />
+            <small class="form-text text-muted mt-1"
+              >Excel 파일(.xlsx)만 업로드 가능합니다.</small
+            >
+          </div>
+
+          <!-- 파일 검증 결과 영역 -->
+          <div id="validationResult" class="mb-3" style="display: none">
+            <div id="validationStatus" class="alert" role="alert"></div>
+            <div id="validationDetails" class="collapse">
+              <div class="card card-body">
+                <div id="validationContent"></div>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" name="file_id" id="file_id" value="" />
+
+          <!-- 파일 검증 버튼 -->
+          <button
+            class="btn btn-info w-100 mb-2"
+            type="button"
+            id="validateFileBtn"
+            onclick="validateFile()"
+            disabled
+          >
+            파일 검증하기
+          </button>
+
+          <!-- 업로드 버튼 (검증 통과 후 활성화) -->
+          <button
+            class="btn btn-primary w-100"
+            type="submit"
+            id="uploadBtn"
+            disabled
+          >
+            업로드
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 기존 업로드 모달 아래에 편집 모달 추가 -->
+<!-- 파일 정보 편집 모달 -->
+<div
+  class="modal fade"
+  id="editModal"
+  tabindex="-1"
+  aria-labelledby="editModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title mx-auto" id="editModalLabel">파일 정보 편집</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <div class="mb-3">
+            <label for="edit_bridge_name" class="form-label">교량명</label>
+            <input
+              type="text"
+              class="form-control"
+              name="bridge_name"
+              id="edit_bridge_name"
+              placeholder="교량명을 입력하세요"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_structure_type" class="form-label">구조형식</label>
+            <select
+              class="form-select"
+              name="structure_type"
+              id="edit_structure_type"
+              required
+            >
+              <option value="">구조형식을 선택하세요</option>
+              <!-- API에서 동적으로 로드됨 -->
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="edit_span_count" class="form-label">경간 수</label>
+              <input
+                type="number"
+                class="form-control"
+                name="span_count"
+                id="edit_span_count"
+                min="1"
+                placeholder="경간 수"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="edit_length" class="form-label">연장(m)</label>
+              <input
+                type="number"
+                class="form-control"
+                name="length"
+                id="edit_length"
+                step="0.1"
+                min="0"
+                placeholder="연장"
+                required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="edit_width" class="form-label">폭(m)</label>
+              <input
+                type="number"
+                class="form-control"
+                name="width"
+                id="edit_width"
+                step="0.1"
+                min="0"
+                placeholder="폭"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="mb-3" style="display: none">
+            <label for="edit_expansion_joint_location" class="form-label"
+              >신축이음 위치</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="expansion_joint_location"
+              id="edit_expansion_joint_location"
+              placeholder="예: A1, P1, P2, A2"
+            />
+          </div>
+
+          <input type="hidden" name="filename" id="edit_filename" value="" />
+
+          <!-- 수정 버튼 -->
+          <button
+            class="btn btn-primary w-100"
+            type="button"
+            id="updateBtn"
+            onclick="updateFileInfo()"
+          >
+            수정하기
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript 파일 포함 -->
+<script src="{{ url_for('static', filename='js/file_upload.js') }}"></script>
+
+<style>
+  .modal-header .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+  }
+  .modal-title {
+    text-align: center;
+    width: 100%;
+  }
+
+  .list-group-item {
+    transition: all 0.3s ease;
+    cursor: pointer; /* 마우스 오버 시 손가락 표시 */
+  }
+  .list-group-item:hover {
+    transform: translateX(5px);
+    background-color: #f8f9fa;
+  }
+  .card {
+    border: none;
+    border-radius: 10px;
+  }
+  .card-header {
+    border-radius: 10px 10px 0 0 !important;
+  }
+
+  /* 삭제 버튼 클릭 시 이벤트 전파 방지 */
+  .btn-danger {
+    position: relative;
+    z-index: 10;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 구조형식 옵션 동적 로드
+    loadStructureTypes();
+
+    // 리스트 아이템 클릭 이벤트
+    const listItems = document.querySelectorAll(".list-group-item");
+
+    listItems.forEach(function (item) {
+      item.addEventListener("click", function (e) {
+        // 삭제 버튼을 클릭한 경우 이벤트 전파 방지
+        if (e.target.closest(".btn-danger")) {
+          e.stopPropagation();
+          return;
+        }
+
+        // 보기 페이지로 이동
+        const href = this.getAttribute("href");
+        if (href) {
+          window.location.href = href;
+        }
+      });
+    });
+
+    // 삭제 버튼 클릭 시 이벤트 전파 방지
+    const deleteButtons = document.querySelectorAll(".btn-danger");
+    deleteButtons.forEach(function (button) {
+      button.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
+    });
+
+    // 테이블 행 클릭 이벤트 (버튼 제외)
+    const tableRows = document.querySelectorAll("tbody tr");
+
+    tableRows.forEach(function (row) {
+      row.addEventListener("click", function (e) {
+        // 버튼이나 폼 요소를 클릭한 경우 이벤트 전파 방지
+        if (
+          e.target.closest("button") ||
+          e.target.closest("form") ||
+          e.target.closest("a")
+        ) {
+          return;
+        }
+
+        // 로딩 오버레이 또는 메시지 표시
+        let loadingOverlay = document.getElementById("row-loading-overlay");
+        if (!loadingOverlay) {
+          loadingOverlay = document.createElement("div");
+          loadingOverlay.id = "row-loading-overlay";
+          loadingOverlay.style.position = "fixed";
+          loadingOverlay.style.top = "0";
+          loadingOverlay.style.left = "0";
+          loadingOverlay.style.width = "100vw";
+          loadingOverlay.style.height = "100vh";
+          loadingOverlay.style.background = "rgba(255,255,255,0.7)";
+          loadingOverlay.style.zIndex = "9999";
+          loadingOverlay.style.display = "flex";
+          loadingOverlay.style.alignItems = "center";
+          loadingOverlay.style.justifyContent = "center";
+          loadingOverlay.innerHTML =
+            '<div style="font-size:2rem; color:#333; background:#fff; border-radius:10px; padding:2rem 3rem; box-shadow:0 2px 8px rgba(0,0,0,0.1);"><i class="fas fa-spinner fa-spin me-2"></i>데이터 준비중입니다. 로딩중...</div>';
+          document.body.appendChild(loadingOverlay);
+        } else {
+          loadingOverlay.style.display = "flex";
+        }
+
+        // 해당 행의 보기 버튼 찾기
+        const viewButton = row.querySelector(".btn-primary");
+        if (viewButton) {
+          viewButton.classList.add("active");
+          setTimeout(() => {
+            const href = viewButton.getAttribute("href");
+            if (href) {
+              window.location.href = href;
+            }
+            // 오버레이는 페이지 이동 후 자동 제거됨
+          }, 500);
+        }
+      });
+
+      // 마우스 오버 효과
+      row.addEventListener("mouseenter", function () {
+        if (!this.classList.contains("table-active")) {
+          this.style.backgroundColor = "#f8f9fa";
+          this.style.cursor = "pointer";
+        }
+      });
+
+      // 마우스 아웃 효과
+      row.addEventListener("mouseleave", function () {
+        if (!this.classList.contains("table-active")) {
+          this.style.backgroundColor = "";
+          this.style.cursor = "";
+        }
+      });
+    });
+  });
+
+  function loadStructureTypes() {
+    fetch("/api/meta_keyword?meta_id=200078")
+      .then((response) => response.json())
+      .then((data) => {
+        const structureSelect = document.getElementById("structure_type");
+
+        // 기존 옵션 제거 (기본 "구조형식을 선택하세요" 제외)
+        const options = structureSelect.querySelectorAll(
+          "option:not(:first-child)"
+        );
+        options.forEach((option) => option.remove());
+
+        // API 응답에서 옵션 추가
+        if (data && data.keywords) {
+          data.keywords.forEach((keyword) => {
+            const option = document.createElement("option");
+            option.value = keyword.keyword;
+            option.textContent = keyword.keyword;
+            structureSelect.appendChild(option);
+          });
+        } else if (data && Array.isArray(data)) {
+          // 응답이 배열인 경우
+          data.forEach((keyword) => {
+            const option = document.createElement("option");
+            option.value = keyword.keyword;
+            option.textContent = keyword.keyword;
+            structureSelect.appendChild(option);
+          });
+        }
+
+        console.log("구조형식 옵션 로드 완료");
+      })
+      .catch((error) => {
+        console.error("구조형식 옵션 로드 실패:", error);
+        // 에러 시 기본 옵션 유지
+      });
+  }
+
+  // 편집 모달용 구조형식 옵션 로드 함수
+  function loadEditStructureTypes(selectedValue = "") {
+    fetch("/api/meta_keyword?meta_id=200078")
+      .then((response) => response.json())
+      .then((data) => {
+        const structureSelect = document.getElementById("edit_structure_type");
+
+        // 기존 옵션 제거 (기본 옵션 제외)
+        const options = structureSelect.querySelectorAll(
+          "option:not(:first-child)"
+        );
+        options.forEach((option) => option.remove());
+
+        // API 응답에서 옵션 추가
+        if (data && data.keywords) {
+          data.keywords.forEach((keyword) => {
+            const option = document.createElement("option");
+            option.value = keyword.keyword;
+            option.textContent = keyword.keyword;
+
+            // 기존 값과 일치하면 선택
+            if (keyword.keyword === selectedValue) {
+              option.selected = true;
+            }
+
+            structureSelect.appendChild(option);
+          });
+        } else if (data && Array.isArray(data)) {
+          // 응답이 배열인 경우
+          data.forEach((keyword) => {
+            const option = document.createElement("option");
+            option.value = keyword.keyword;
+            option.textContent = keyword.keyword;
+
+            // 기존 값과 일치하면 선택
+            if (keyword.keyword === selectedValue) {
+              option.selected = true;
+            }
+
+            structureSelect.appendChild(option);
+          });
+        }
+
+        console.log("편집용 구조형식 옵션 로드 완료");
+      })
+      .catch((error) => {
+        console.error("편집용 구조형식 옵션 로드 실패:", error);
+      });
+  }
+
+  // 편집 모달 열기 함수
+  function openEditModal(
+    filename,
+    bridgeName,
+    structureType,
+    spanCount,
+    length,
+    width
+  ) {
+    console.log("편집 모달 열기:", filename);
+
+    // 편집 폼에 기존 값 설정
+    document.getElementById("edit_bridge_name").value = bridgeName || "";
+    document.getElementById("edit_span_count").value = spanCount || "";
+    document.getElementById("edit_length").value = length || "";
+    document.getElementById("edit_width").value = width || "";
+    document.getElementById("edit_filename").value = filename;
+
+    // 편집용 구조형식 옵션 로드 (기존 값 선택)
+    loadEditStructureTypes(structureType);
+  }
+
+  // 파일 정보 업데이트 함수
+  function updateFileInfo() {
+    const filename = document.getElementById("edit_filename").value;
+    const bridgeName = document.getElementById("edit_bridge_name").value.trim();
+    const structureType = document.getElementById("edit_structure_type").value;
+    const spanCount = document.getElementById("edit_span_count").value;
+    const length = document.getElementById("edit_length").value;
+    const width = document.getElementById("edit_width").value;
+
+    // 폼 유효성 검사
+    if (!bridgeName) {
+      alert("교량명을 입력해주세요.");
+      document.getElementById("edit_bridge_name").focus();
+      return;
+    }
+
+    if (!structureType) {
+      alert("구조형식을 선택해주세요.");
+      document.getElementById("edit_structure_type").focus();
+      return;
+    }
+
+    if (!spanCount || spanCount < 1) {
+      alert("올바른 경간 수를 입력해주세요.");
+      document.getElementById("edit_span_count").focus();
+      return;
+    }
+
+    if (!length || length <= 0) {
+      alert("올바른 연장을 입력해주세요.");
+      document.getElementById("edit_length").focus();
+      return;
+    }
+
+    if (!width || width <= 0) {
+      alert("올바른 폭을 입력해주세요.");
+      document.getElementById("edit_width").focus();
+      return;
+    }
+
+    // 확인 대화상자
+    if (!confirm("파일 정보를 수정하시겠습니까?")) {
+      return;
+    }
+
+    const formData = {
+      filename: filename,
+      bridge_name: bridgeName,
+      structure_type: structureType,
+      span_count: parseInt(spanCount),
+      length: parseFloat(length),
+      width: parseFloat(width),
+      expansion_joint_location:
+        document.getElementById("edit_expansion_joint_location").value.trim() ||
+        "",
+    };
+
+    // 로딩 상태 표시
+    const updateBtn = document.getElementById("updateBtn");
+    const originalText = updateBtn.textContent;
+    updateBtn.textContent = "수정 중...";
+    updateBtn.disabled = true;
+
+    console.log("파일 정보 수정 요청:", formData);
+
+    // API 호출
+    fetch("/api/update_bridge_info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("파일 정보 수정 응답:", data);
+
+        if (data.success) {
+          alert("파일 정보가 성공적으로 수정되었습니다.");
+
+          // 모달 닫기
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById("editModal")
+          );
+          if (modal) {
+            modal.hide();
+          }
+
+          // 페이지 새로고침으로 업데이트된 정보 반영
+          setTimeout(() => {
+            location.reload();
+          }, 500);
+        } else {
+          throw new Error(data.error || "알 수 없는 오류가 발생했습니다.");
+        }
+      })
+      .catch((error) => {
+        console.error("파일 정보 수정 오류:", error);
+        alert("파일 정보 수정에 실패했습니다: " + error.message);
+      })
+      .finally(() => {
+        // 로딩 상태 해제
+        updateBtn.textContent = originalText;
+        updateBtn.disabled = false;
+      });
+  }
+
+  // 편집 폼 초기화 (모달이 닫힐 때)
+  function clearEditForm() {
+    document.getElementById("editForm").reset();
+    document.getElementById("edit_filename").value = "";
+  }
+
+  // 모달 이벤트 리스너 추가 (기존 DOMContentLoaded 이벤트에 추가)
+  document.addEventListener("DOMContentLoaded", function () {
+    // 기존 코드...
+
+    // 편집 모달 이벤트 리스너 추가
+    const editModal = document.getElementById("editModal");
+    if (editModal) {
+      editModal.addEventListener("hidden.bs.modal", function () {
+        clearEditForm();
+      });
+    }
+  });
+
+  function deleteFileAjax(btn) {
+    const filename = btn.getAttribute("data-filename");
+    fetch(`/files/delete_file/${filename}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          // 삭제된 파일 행 DOM에서 제거
+          btn.closest("tr").remove();
+        } else {
+          alert("파일 삭제에 실패했습니다.");
+        }
+      })
+      .catch(() => {
+        alert("서버 오류로 파일 삭제에 실패했습니다.");
+      });
+  }
+</script>
+{% endblock %}

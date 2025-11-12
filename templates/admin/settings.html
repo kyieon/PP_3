@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}시스템 설정{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>시스템 설정</h2>
+
+            <!-- 탭 네비게이션 -->
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_home') }}">메타데이터</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_users') }}">사용자 관리</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_files') }}">파일 관리</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin.admin_settings') }}">설정</a>
+                </li>
+            </ul>
+
+            <!-- 시스템 설정 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>캐시 관리</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>손상 솔루션 캐시를 관리합니다.</p>
+                            <a href="{{ url_for('admin.cache_management') }}" class="btn btn-primary">
+                                캐시 관리 페이지로 이동
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>데이터베이스 설정</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>데이터베이스 연결 및 백업 설정을 관리합니다.</p>
+                            <div class="mb-3">
+                                <label class="form-label">데이터베이스 상태</label>
+                                <div id="dbStatus" class="alert alert-info">
+                                    확인 중...
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="checkDbConnection()">
+                                연결 상태 확인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>시스템 정보</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Flask 버전</th>
+                                    <td id="flaskVersion">확인 중...</td>
+                                </tr>
+                                <tr>
+                                    <th>Python 버전</th>
+                                    <td id="pythonVersion">확인 중...</td>
+                                </tr>
+                                <tr>
+                                    <th>서버 시작 시간</th>
+                                    <td id="serverStartTime">확인 중...</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>로그 관리</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>시스템 로그를 확인하고 관리합니다.</p>
+                            <button class="btn btn-info" onclick="viewLogs()">
+                                최근 로그 보기
+                            </button>
+                            <button class="btn btn-warning" onclick="clearLogs()">
+                                로그 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    checkDbConnection();
+    loadSystemInfo();
+});
+
+function checkDbConnection() {
+    const statusDiv = document.getElementById('dbStatus');
+    statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>확인 중...';
+
+    // 데이터베이스 연결 확인 API 호출
+    fetch('/admin/api/db-status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.className = 'alert alert-success';
+                statusDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i>데이터베이스 연결 정상';
+            } else {
+                statusDiv.className = 'alert alert-danger';
+                statusDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>데이터베이스 연결 실패: ' + data.error;
+            }
+        })
+        .catch(error => {
+            statusDiv.className = 'alert alert-danger';
+            statusDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>연결 확인 실패';
+        });
+}
+
+function loadSystemInfo() {
+    // 시스템 정보 로딩 (실제 구현 시 API 호출)
+    document.getElementById('flaskVersion').textContent = '3.1.0';
+    document.getElementById('pythonVersion').textContent = '3.11.x';
+    document.getElementById('serverStartTime').textContent = new Date().toLocaleString();
+}
+
+function viewLogs() {
+    // 로그 보기 기능 (실제 구현 시 별도 페이지나 모달)
+    alert('로그 보기 기능은 추후 구현 예정입니다.');
+}
+
+function clearLogs() {
+    if (confirm('정말로 모든 로그를 초기화하시겠습니까?')) {
+        // 로그 초기화 API 호출
+        alert('로그 초기화 기능은 추후 구현 예정입니다.');
+    }
+}
+</script>
+{% endblock %}

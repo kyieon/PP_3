@@ -1,0 +1,1985 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">교량 상태평가</h2>
+
+  <!-- 기본 정보 입력 섹션 -->
+
+  <style>
+    /* 스티키 네비게이션 컨테이너 */
+    .sticky-navigation {
+      position: relative;
+      z-index: 1000;
+    }
+    /* 스티키 헤더 */
+    .sticky-header {
+      position: sticky;
+      top: 60px;
+      z-index: 1020;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      border-bottom: 1px solid #dee2e6;
+      padding: 12px 16px;
+      border-radius: 0;
+      margin-bottom: 0;
+      display: flex;
+      justify-content: flex-start; /* 좌측 정렬로 변경 */
+      align-items: center;
+      flex-wrap: nowrap; /* 한 줄로 고정 */
+      gap: 10px;
+      overflow-x: auto; /* 가로 스크롤 활성화 */
+      overflow-y: hidden; /* 세로 스크롤 비활성화 */
+      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    }
+
+    /* 스크롤바 스타일링 */
+    .sticky-header::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .sticky-header::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    .sticky-header::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+
+    .sticky-header::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* 부재명 버튼들이 줄바꿈되지 않도록 설정 */
+    .sticky-header a,
+    .sticky-header button {
+      flex-shrink: 0; /* 버튼 크기 축소 방지 */
+      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+      display: inline-block; /* 인라인 블록으로 설정 */
+      margin-right: 5px; /* 버튼 간 간격 */
+    }
+
+    /* 부재명 버튼 스타일 개선 */
+    .sticky-header .btn-sm {
+      min-width: auto; /* 최소 너비 제거 */
+      padding: 6px 12px; /* 패딩 조정 */
+      font-size: 13px; /* 폰트 크기 조정 */
+    }
+
+    /* 상단 고정바 내부 요소들 정렬 */
+    .sticky-header > * {
+      flex-shrink: 0; /* 모든 자식 요소 크기 축소 방지 */
+      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    }
+
+    /* 상단 고정바 제목 부분 */
+    .sticky-header h5 {
+      margin-right: 15px; /* 제목과 버튼들 사이 간격 */
+      flex-shrink: 0; /* 제목 크기 축소 방지 */
+    }
+
+    /* 네비게이션 버튼들 */
+    .nav-buttons {
+      display: flex;
+      flex-wrap: nowrap; /* 한 줄로 고정 */
+      gap: 5px;
+      justify-content: flex-start; /* 좌측 정렬 */
+      overflow-x: auto; /* 가로 스크롤 활성화 */
+    }
+
+    .nav-btn {
+      background-color: #3790f5;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background-color: #2c7ae0;
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    /* 스크롤 시 부드러운 이동 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* 카드 헤더들의 스크롤 마진 조정 */
+    .card-header h5[id*="EvaluationHeader"] {
+      scroll-margin-top: 150px;
+    }
+
+    /* 반응형 대응 - 모바일에서도 한 줄 유지 */
+    @media (max-width: 768px) {
+      .sticky-header {
+        flex-direction: row; /* 세로에서 가로로 변경 */
+        align-items: center;
+        padding: 8px 12px; /* 패딩 조정 */
+        gap: 8px; /* 간격 조정 */
+      }
+
+      .nav-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: nowrap; /* 한 줄로 고정 */
+        overflow-x: auto; /* 가로 스크롤 활성화 */
+      }
+
+      .nav-btn {
+        font-size: 12px;
+        padding: 5px 8px;
+        flex-shrink: 0; /* 버튼 크기 축소 방지 */
+      }
+
+      /* 모바일에서 부재명 버튼 크기 조정 */
+      .sticky-header .btn-sm {
+        font-size: 11px;
+        padding: 4px 8px;
+        margin-right: 3px;
+      }
+
+      /* 모바일에서 제목과 버튼 간격 조정 */
+      .sticky-header h5 {
+        margin-right: 10px;
+        font-size: 14px;
+      }
+    }
+
+    /* 스티키 헤더가 활성화될 때 애니메이션 */
+    .sticky-header.sticky {
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* 네비게이션 버튼 활성화 상태 */
+    .nav-btn.active {
+      background-color: #2c7ae0;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 카드 헤더 하이라이트 효과 */
+    .card-header:target {
+      background-color: #e3f2fd !important;
+      transition: background-color 0.3s ease;
+    }
+
+    /* 스크롤 시 네비게이션 버튼 활성화 */
+    .nav-btn[href]:target {
+      background-color: #2c7ae0;
+    }
+  </style>
+ <style>
+/* 테이블을 화면 너비에 맞춤 */
+.table-responsive {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+}
+
+/* 테이블 자체 크기 조정 - 균등 배분 */
+.tableFixed {
+  width: 100% !important;
+  table-layout: fixed !important; /* 고정 레이아웃으로 강제 크기 조정 */
+  font-size: 12px;
+}
+
+/* 테이블 셀 크기 조정 */
+.table th,
+.table td {
+  padding: 4px 6px !important;
+  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center; /* 중앙 정렬 */
+  vertical-align: middle;
+}
+
+/* 입력 필드 크기 조정 */
+.table input.form-control {
+  width: 100% !important;
+  min-width: 50px;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+/* 화면 전체 너비 사용 */
+.container {
+  max-width: 100% !important;
+  padding: 0 10px;
+}
+
+/* 특정 테이블들만 제외하고 나머지는 균등 배분 */
+.tableFixed:not(#bridgeListTable) th,
+.tableFixed:not(#bridgeListTable) td {
+  width: auto !important; /* 자동 균등 배분 */
+}
+
+/* 반응형 대응 */
+@media (max-width: 768px) {
+  .table {
+    font-size: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 2px 3px !important;
+  }
+
+  .table input.form-control {
+    font-size: 9px;
+    padding: 1px 2px;
+  }
+}
+</style>
+  <!-- 저장된 교량 리스트 섹션 -->
+  <div class="card mb-4" id="bridgeListCard" style="display: none">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0" id="bridgeListHeader">저장된 교량 목록</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table style="table-layout:none " class="table table-striped" id="bridgeListTable">
+          <thead>
+            <tr>
+              <th >교량명</th>
+              <th >구조형식</th>
+              <th  >연장(m)</th>
+              <th  >폭(m)</th>
+              <th  >경간 수</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- 저장된 교량 데이터가 여기에 동적으로 추가됩니다 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4" style="display: none" id="bridgeInfoCard">
+    <div
+      class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+    >
+      <h5 class="mb-0">
+        교량 정보 입력
+        <select
+          style="display: none"
+          class="form-select"
+          id="bridgeName"
+          name="bridgeName"
+          required
+          readonly
+        >
+          <option value="">교량명을 선택하세요</option>
+        </select>
+      </h5>
+
+      <button type="button" id="generateSpans" class="btn btn-primary">
+        저장
+      </button>
+    </div>
+
+    <div class="card-body">
+      <form id="bridgeInfoForm">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="bridgeName" class="form-label">교량명</label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="bridgeNameInput"
+              placeholder="새 교량명 입력"
+              style="display: "
+              name="bridgeNameInput"
+              placeholder="예: A1, P1, P2, A2"
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="structureType" class="form-label">구조형식</label>
+            <select
+              class="form-select"
+              id="structureType"
+              name="structureType"
+              required
+            >
+              <option value="">구조형식 선택</option>
+              <option value="PSC BOX">PSC BOX</option>
+              <option value="PSCI">PSCI</option>
+              <option value="STB">STB</option>
+              <option value="RCS">RCS</option>
+              <option value="일반거더교">일반거더교</option>
+              <option value="RA(거더없음)">RA(거더없음)</option>
+              <option value="RA(거더있음)">RA(거더있음)</option>
+              <option value="강바닥판거더교">강바닥판거더교</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="spanCount" class="form-label">경간 수</label>
+            <input
+              type="number"
+              class="form-control"
+              id="spanCount"
+              name="spanCount"
+              min="1"
+              required
+            />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="length" class="form-label">연장(m)</label>
+            <input
+              type="number"
+              class="form-control"
+              id="length"
+              name="length"
+              step="0.1"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="width" class="form-label">폭(m)</label>
+            <input
+              type="number"
+              class="form-control"
+              id="width"
+              name="width"
+              step="0.1"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="expansionJointLocations" class="form-label"
+              >신축이음 위치</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="expansionJointLocations"
+              name="expansionJointLocations"
+              placeholder="예: A1, P1, P2, A2"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- 부재별 선택 섹션 -->
+  <div class="card mb-4" id="componentSelectionCard" style="display: none">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">평가할 부재 선택</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="slabCheck"
+              checked
+            />
+            <label class="form-check-label" for="slabCheck">바닥판</label>
+          </div>
+          <select class="form-select mt-2" id="slabType">
+            <option value="RC">철근콘크리트 바닥판</option>
+            <option value="PSC">프리스트레스 콘크리트 바닥판</option>
+            <option value="STEEL">강 바닥판</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="girderCheck"
+              checked
+            />
+            <label class="form-check-label" for="girderCheck">거더</label>
+          </div>
+          <select class="form-select mt-2" id="girderType">
+            <option value="RC">철근콘크리트 거더</option>
+            <option value="PSC">프리스트레스 콘크리트 거더</option>
+            <option value="STEEL">강 거더</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="crossbeamCheck"
+              checked
+            />
+            <label class="form-check-label" for="crossbeamCheck">가로보</label>
+          </div>
+          <select class="form-select mt-2" id="crossbeamType">
+            <option value="RC">철근콘크리트 가로보</option>
+            <option value="STEEL">강 가로보</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="abutmentCheck"
+              checked
+            />
+            <label class="form-check-label" for="abutmentCheck">교대</label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pierCheck"
+              checked
+            />
+            <label class="form-check-label" for="pierCheck">교각</label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="bearingCheck"
+              checked
+            />
+            <label class="form-check-label" for="bearingCheck">교량받침</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="foundationCheck"
+              checked
+            />
+            <label class="form-check-label" for="foundationCheck">기초</label>
+          </div>
+          <div class="mt-2" id="foundationExposedInput" style="display: none">
+            <label for="exposedFoundationPositions" class="form-label small"
+              >노출된 기초 위치:</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              id="exposedFoundationPositions"
+              placeholder="예: P6, P7 (쉼표로 구분)"
+              title="노출된 기초 위치를 쉼표로 구분하여 입력하세요"
+            />
+            <small class="form-text text-muted"
+              >노출된 기초 위치를 쉼표로 구분하여 입력하세요 (예: P6, P7)</small
+            >
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="expansionJointCheck"
+              checked
+            />
+            <label class="form-check-label" for="expansionJointCheck"
+              >신축이음</label
+            >
+          </div>
+          <div
+            class="mt-2"
+            id="expansionJointLocationInput"
+            style="display: none"
+          >
+            <label for="expansionJointPositions" class="form-label small"
+              >신축이음 위치:</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              id="expansionJointPositions"
+              placeholder="예: A1, A2 (쉼표로 구분)"
+              title="신축이음 위치를 쉼표로 구분하여 입력하세요"
+            />
+            <small class="form-text text-muted"
+              >신축이음 위치를 쉼표로 구분하여 입력하세요 (예: A1, A2)</small
+            >
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pavementCheck"
+              checked
+            />
+            <label class="form-check-label" for="pavementCheck">교면포장</label>
+          </div>
+          <select class="form-select mt-2" id="pavementType">
+            <option value="ASPHALT">아스팔트 포장</option>
+            <option value="CONCRETE">콘크리트 포장</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="drainageCheck"
+              checked
+            />
+            <label class="form-check-label" for="drainageCheck">배수시설</label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="railingCheck"
+              checked
+            />
+            <label class="form-check-label" for="railingCheck"
+              >난간 및 연석</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- 탄산화 시험 선택 섹션 -->
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="carbonationUpperCheck"
+              checked
+            />
+            <label class="form-check-label" for="carbonationUpperCheck">탄산화 상부</label>
+          </div>
+          <div class="mt-2">
+            <label for="carbonationUpperPositions" class="form-label small">탄산화 상부 시험 위치:</label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              id="carbonationUpperPositions"
+              placeholder="예: S1, S2 (쉼표로 구분)"
+              title="탄산화 상부 시험 위치를 쉼표로 구분하여 입력하세요"
+            />
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="carbonationLowerCheck"
+              checked
+            />
+            <label class="form-check-label" for="carbonationLowerCheck">탄산화 하부</label>
+          </div>
+          <div class="mt-2">
+            <label for="carbonationLowerPositions" class="form-label small">탄산화 하부 시험 위치:</label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              id="carbonationLowerPositions"
+              placeholder="예: A1, P1, P3, A2 (쉼표로 구분)"
+              title="탄산화 하부 시험 위치를 쉼표로 구분하여 입력하세요"
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="mb-3">
+        <label class="form-label fw-bold"
+          >부재별 가중치 입력 (합계 100이 되어야 합니다)</label
+        >
+        <div class="row">
+          <div class="col-1 mb-1">
+            <label
+              for="weightSlab"
+              class="form-label small"
+              id="labelWeightSlab"
+              >바닥판</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightSlab"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightGirder" class="form-label small">거더</label>
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightGirder"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightCrossbeam" class="form-label small">가로보</label>
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightCrossbeam"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightPavement" class="form-label small"
+              >교면포장</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightPavement"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightDrainage" class="form-label small"
+              >배수시설</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightDrainage"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightRailing" class="form-label small"
+              >난간 및 연석</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightRailing"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightExpansionJoint" class="form-label small"
+              >신축이음</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightExpansionJoint"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightBearing" class="form-label small">교량받침</label>
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightBearing"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightAbutment" class="form-label small"
+              >교대/교각</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightAbutment"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+
+          <div class="col-1 mb-1">
+            <label for="weightFoundation" class="form-label small">기초</label>
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightFoundation"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightCarbonationUpper" class="form-label small"
+              >탄산화 상부</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightCarbonationUpper"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+          <div class="col-1 mb-1">
+            <label for="weightCarbonationLower" class="form-label small"
+              >탄산화 하부</label
+            >
+            <input
+              type="number"
+              class="form-control weight-input"
+              id="weightCarbonationLower"
+              min="0"
+              max="100"
+              value="0"
+            />
+          </div>
+
+          <div class="mt-2">
+            <span id="weightSumText" class="fw-bold">가중치 합계: 0</span>
+            <span
+              id="weightSumWarning"
+              class="text-danger ms-3"
+              style="display: none"
+              >가중치 합이 100이 되어야 합니다.</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="generateEvaluation" class="btn btn-primary">
+        상태평가 생성
+      </button>
+    </div>
+  </div>
+
+  <!-- 상태평가 결과 섹션 바로 위에 추가 -->
+
+  <!-- 이하 기존 상태평가 카드들 ... -->
+  <!-- 상태평가 결과 섹션 -->
+  <div  id="evaluationResults" style="display: none">
+    <!-- 상태평가 결과 섹션 -->
+    <div >
+      <!-- 네비게이션 헤더를 별도 div로 분리 -->
+
+      <!-- 실제 카드들 -->
+      <div id="slabEvaluationCard" class="card mb-4">
+        <!-- 기존 카드 내용 -->
+      </div>
+      <!-- 다른 카드들... -->
+    </div>
+    <!-- 바닥판 상태평가 -->
+    <div class="card-header sticky-header">
+      {{ detail_html_header_link | safe }}
+      <a
+        href="#slabEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >바닥판</a
+      >
+      <a
+        href="#girderEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >거더</a
+      >
+      <a
+        href="#crossbeamEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >가로보</a
+      >
+      <a
+        href="#abutmentEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >교대</a
+      >
+      <a
+        href="#pierEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >교각</a
+      >
+      <a
+        href="#foundationEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >기초</a
+      >
+      <a
+        href="#bearingEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >교량받침</a
+      >
+      <a
+        href="#expansionJointEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >신축이음</a
+      >
+      <a
+        href="#pavementEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >교면포장</a
+      >
+      <a
+        href="#drainageEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >배수시설</a
+      >
+      <a
+        href="#railingEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgb(55, 144, 245); color: #fff; border: none"
+        >난간 및 연석</a
+      >
+      <a
+        href="#totalEvaluationHeader"
+        class="btn btn-sm"
+        style="background-color: rgba(125, 55, 245, 1); color: #fff; border: none"
+        >통합산정결과표</a
+      >
+
+    </div>
+
+    <!-- 부재별 바로가기 버튼 리스트 추가 -->
+    <div
+      class="mb-3 d-flex flex-wrap gap-2"
+      style="
+        background-color: rgb(244, 245, 247);
+        padding: 16px;
+        border-radius: 8px;
+      "
+    ></div>
+
+    <!--여기서부터는 각 부재별 상태평가가 생성됩니다. -->
+
+    <div id="slabEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="slabEvaluationHeader" style="scroll-margin-top: 80px">
+          바닥판 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveSlabEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            바닥판 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="slabEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 거더 상태평가 -->
+    <div id="girderEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="girderEvaluationHeader" style="scroll-margin-top: 80px">
+          거더 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveGirderEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            거더 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="girderEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 가로보 상태평가 -->
+    <div id="crossbeamEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="crossbeamEvaluationHeader" style="scroll-margin-top: 80px">
+          가로보 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveCrossbeamEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            가로보 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="crossbeamEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 교대 상태평가 -->
+    <div id="abutmentEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="abutmentEvaluationHeader" style="scroll-margin-top: 80px">
+          교대 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveAbutmentEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            교대 저장/반영
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="abutmentEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 교각 상태평가 -->
+    <div id="pierEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="pierEvaluationHeader" style="scroll-margin-top: 80px">
+          교각 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSavePierEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            교각 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="pierEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기초 상태평가 -->
+    <div id="foundationEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="foundationEvaluationHeader" style="scroll-margin-top: 80px">
+          기초 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveFoundationEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            기초 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="foundationEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 교량받침 상태평가 -->
+    <div id="bearingEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="bearingEvaluationHeader" style="scroll-margin-top: 80px">
+          교량받침 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveBearingEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            교량받침 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="bearingEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 신축이음 상태평가 -->
+    <div id="expansionJointEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="expansionJointEvaluationHeader" style="scroll-margin-top: 80px">
+          신축이음 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveExpansionJointEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            신축이음 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="expansionJointEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 교면포장 상태평가 -->
+    <div id="pavementEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="pavementEvaluationHeader" style="scroll-margin-top: 80px">
+          교면포장 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSavePavementEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            교면포장 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="pavementEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 배수시설 상태평가 -->
+    <div id="drainageEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="drainageEvaluationHeader" style="scroll-margin-top: 80px">
+          배수시설 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveDrainageEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            배수시설 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table  table-bordered evaluation-table"
+            id="drainageEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 난간 및 연석 상태평가 -->
+    <div id="railingEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0" id="railingEvaluationHeader" style="scroll-margin-top: 80px">
+          난간 및 연석 상태평가 결과
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="crackSaveRailingEvaluationCard"
+            class="btn btn-light btn-xs save-btn"
+          >
+            난간 및 연석 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            class="table tableFixed table-bordered evaluation-table"
+            id="railingEvaluationTable"
+          >
+            <!-- 자바스크립트로 테이블 내용 채워짐 -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+
+     <div id="totalEvaluationCard" class="card mb-4">
+      <div
+        class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      >
+        <h5
+          class="mb-0"
+          id="totalEvaluationHeader"
+          style="scroll-margin-top: 80px"
+        >
+          상태평가 통합 산정 결과표
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            id="saveTotalEvaluation"
+            class="btn btn-light btn-xs save-btn"
+          >
+            통합결과 저장/반영
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <h6 class="mb-3">등급 평가표</h6>
+          <table
+              class="table tableFixed table-bordered evaluation-table"
+              id="totalEvaluationTable"
+            >
+              <!-- 자바스크립트로 테이블 내용 채워짐 -->
+            </table>
+        </div>
+
+        <div class="table-responsive mt-4">
+          <h6 class="mb-3">점수 평가표</h6>
+          <table
+              class="table tableFixed table-bordered evaluation-table"
+              id="totalScoreEvaluationTable"
+            >
+              <!-- 자바스크립트로 점수 테이블 내용 채워짐 -->
+            </table>
+        </div>
+      </div>
+    </div>
+
+
+
+      <!-- 다운로드/저장/출력 버튼 영역 수정 -->
+      <div class="d-flex justify-content-end mb-4">
+
+        <button type="button" id="printEvaluation" class="btn btn-warning me-2">
+          <i class="bi bi-printer"></i> 출력
+        </button>
+        <button type="button" id="downEvaluation" class="btn btn-success">
+          <i class="bi bi-file-earmark-word"></i> Word 다운로드
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="loading-spinner"
+      style="
+        display: none;
+        position: fixed;
+        left: 55%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 99999;
+      "
+    >
+      <div
+        class="spinner-border"
+        role="status"
+        style="width: 3rem; height: 3rem"
+      >
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    {% endblock %} {% block extra_js %}
+    <script src="{{ url_for('static', filename='js/evaluation_table_evaluateGrade.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/evaluation_table.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/span_damage.js') }}"></script>
+
+    <script>
+      $("#printEvaluation").on("click", function () {
+        // 평가표 영역 복제 및 버튼 제거
+        var $clone = $("#evaluationResults").clone();
+        $clone.find("button, .btn").remove();
+
+        // input[type="number"], input[type="text"], input[type="email"] 등 모든 입력 상자를 텍스트로 변환
+        $clone.find("input").each(function () {
+          var $input = $(this);
+          var value = $input.val();
+          // 입력값을 span으로 교체
+          $input.replaceWith($("<span>").text(value));
+        });
+
+        // 모든 th/td에 width 속성 추가 (downEvaluation과 동일)
+        $clone.find("table").each(function () {
+          var $ths = $(this).find("th");
+          var colCount = 0;
+
+          // th의 colspan을 모두 더해서 실제 열 개수 계산
+          $ths.each(function () {
+            var colspan = parseInt($(this).attr("colspan")) || 1;
+            colCount += colspan;
+          });
+
+          if (colCount > 0) {
+            var width = Math.floor(100 / colCount);
+
+            // 각 td의 colspan과 rowspan을 고려하여 width 지정
+            $(this)
+              .find("td")
+              .each(function () {
+                var colspan = parseInt($(this).attr("colspan")) || 1;
+                // rowspan이 있으면, 해당 셀은 여러 행에 걸쳐 있으므로 width만 지정
+                $(this).css("width", width * colspan + "%");
+              });
+
+            // th에도 동일하게 적용
+            $ths.each(function () {
+              var colspan = parseInt($(this).attr("colspan")) || 1;
+              $(this).css("width", width * colspan + "%");
+            });
+          }
+        });
+
+        // 프린트용 HTML 래퍼 (Word 스타일 일부 적용, landscape)
+        var printHtml = `
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <title>상태평가</title>
+      <style>
+        @media print {
+          @page { size: A4 landscape; }
+        }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        th, td { border: 1px solid #333; padding: 4px; font-size: 10pt; }
+        th { background: #e9ecef; font-size: 9pt; }
+        .bg-primary { background: #0d6efd !important; color: #fff !important; }
+        .text-white { color: #fff !important; }
+        .card { border: 1px solid #ccc; margin-bottom: 1rem; border-radius: 0.5rem; }
+        .card-header { font-weight: bold; padding: 0.5rem 0.7rem; font-size: 11pt; }
+        .card-body { padding: 0.7rem; }
+      </style>
+    </head>
+    <body>
+      <div class="Section1">
+        ${$clone[0].outerHTML}
+      </div>
+    </body>
+  </html>
+  `;
+
+        // 새 창에 출력용 HTML 삽입 후 프린트
+        var printWindow = window.open("", "_blank");
+        printWindow.document.open();
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function () {
+          printWindow.print();
+          printWindow.close(); // 필요시 자동 닫기
+        }, 500);
+      });
+
+      $("#downEvaluation").on("click", function () {
+        var $clone = $("#evaluationResults").clone();
+        $clone.find("button, .btn").remove(); // 모든 버튼 제거
+        // 2. HTML 추출
+        var tableHtml = $clone[0].outerHTML;
+
+        // Word로 내보내기 전에 모든 th/td에 width 속성 추가
+        $clone.find("table").each(function () {
+          var $ths = $(this).find("th");
+          var colCount = $ths.length;
+          if (colCount > 0) {
+            var width = Math.floor(100 / colCount) + "%";
+            $ths.each(function () {
+              $(this).css("width", width);
+            });
+            $(this)
+              .find("td")
+              .each(function () {
+                $(this).css("width", width);
+              });
+          }
+        });
+
+        // Word 파일용 HTML 래퍼 (여기에 스타일 추가)
+        var preHtml = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office'
+      xmlns:w='urn:schemas-microsoft-com:office:word'
+      xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'><title>상태평가</title>
+  <style>
+    @page Section1 { size: 297mm 210mm; mso-page-orientation: landscape; }
+    div.Section1 { page: Section1; }
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { border: 1px solid #333; padding: 4px; font-size: 10pt; }
+    th { background: #e9ecef; font-size: 9pt; }
+    .bg-primary { background: #0d6efd !important; color: #fff !important; }
+    .text-white { color: #fff !important; }
+    .card { border: 1px solid #ccc; margin-bottom: 1rem; border-radius: 0.5rem; }
+    .card-header { font-weight: bold; padding: 0.5rem 0.7rem; font-size: 11pt; }
+    .card-body { padding: 0.7rem; }
+    .btn { display: none; }
+  </style>
+  <!-- Word landscape orientation -->
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+      <w:Orientation>Landscape</w:Orientation>
+    </w:WordDocument>
+  </xml>
+</head><body><div class="Section1">
+`;
+
+        var postHtml = "</div></body></html>";
+        var html = preHtml + tableHtml + postHtml;
+
+        var blob = new Blob(["\ufeff", html], { type: "application/msword" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "상태평가_통합결과표.doc";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 0);
+      });
+
+      // 구조형식 선택이 변경될 때 STRUCTURE_WEIGHTS에서 해당 구조형식의 가중치 자동 세팅
+      $(document).on("change", "#structureType", function () {
+        const selectedType = $(this).val();
+        const weights = STRUCTURE_WEIGHTS[selectedType];
+        // 바닥판/슬래브 라벨 동적 변경
+        if (selectedType === "RCS") {
+          $("#labelWeightSlab").text("슬래브");
+        } else {
+          $("#labelWeightSlab").text("바닥판");
+        }
+        if (weights) {
+          $("#weightSlab").val(0);
+          $("#weightGirder").val(0);
+          $("#weightCrossbeam").val(0);
+          $("#weightPavement").val(0);
+          $("#weightDrainage").val(0);
+          $("#weightRailing").val(0);
+          $("#weightExpansionJoint").val(0);
+          $("#weightBearing").val(0);
+          $("#weightAbutment").val(0);
+          $("#weightFoundation").val(0);
+          $("#weightCarbonationUpper").val(0);
+          $("#weightCarbonationLower").val(0);
+
+          // 각 부재별 가중치 입력란에 값 자동 세팅
+          if (weights["바닥판"] !== undefined)
+            $("#weightSlab").val(weights["바닥판"]);
+          if (weights["슬래브"] !== undefined)
+            $("#weightSlab").val(weights["슬래브"]);
+
+          if (weights["거더"] !== undefined)
+            $("#weightGirder").val(weights["거더"]);
+          if (weights["2차부재"] !== undefined)
+            $("#weightCrossbeam").val(weights["2차부재"]);
+          if (weights["교면포장"] !== undefined)
+            $("#weightPavement").val(weights["교면포장"]);
+          if (weights["배수시설"] !== undefined)
+            $("#weightDrainage").val(weights["배수시설"]);
+          if (weights["난간/연석"] !== undefined)
+            $("#weightRailing").val(weights["난간/연석"]);
+          if (weights["신축이음"] !== undefined)
+            $("#weightExpansionJoint").val(weights["신축이음"]);
+          if (weights["교량받침"] !== undefined)
+            $("#weightBearing").val(weights["교량받침"]);
+          if (weights["교대/교각"] !== undefined) {
+            $("#weightAbutment").val(weights["교대/교각"]);
+          }
+          if (weights["기초"] !== undefined)
+            $("#weightFoundation").val(weights["기초"]);
+
+          if (weights["탄산화_상부"] !== undefined)
+            $("#weightCarbonationUpper").val(weights["탄산화_상부"]);
+          if (weights["탄산화_하부"] !== undefined)
+            $("#weightCarbonationLower").val(weights["탄산화_하부"]);
+          $(".weight-input").each(function () {
+            const val = Number($(this).val()) || 0;
+            if (val === 0) {
+              $(this).closest(".col-1, .col-2, .col-3").hide();
+            } else {
+              $(this).closest(".col-1, .col-2, .col-3").show();
+            }
+          });
+        }
+        // 가중치 합계 갱신 함수 호출 (이미 구현되어 있다면)
+        if (typeof updateWeightSum === "function") updateWeightSum();
+      });
+
+      // 페이지 로드시에도 라벨 동기화
+      $(document).ready(function () {
+        // 구조형식이 비어있으면 PSC BOX로 세팅
+        if (!$("#structureType").val()) {
+          $("#structureType").val("PSC BOX").trigger("change");
+        }
+        // 라벨 동기화 및 가중치 합계 갱신
+        const selectedType = $("#structureType").val();
+        if (selectedType === "RCS") {
+          $("#labelWeightSlab").text("슬래브");
+        } else {
+          $("#labelWeightSlab").text("바닥판");
+        }
+        updateWeightSum();
+      });
+
+      // 가중치 입력값 합계 계산 및 검증
+      function updateWeightSum() {
+        let sum = 0;
+        $(".weight-input").each(function () {
+          sum += Number($(this).val()) || 0;
+        });
+        $("#weightSumText").text("가중치 합계: " + sum);
+        if (sum !== 100) {
+          $("#weightSumWarning").show();
+          $("#generateEvaluation").prop("disabled", true);
+        } else {
+          $("#weightSumWarning").hide();
+          $("#generateEvaluation").prop("disabled", false);
+        }
+      }
+
+      // 입력값 변경 시 합계 자동 갱신
+      $(document).on("input", ".weight-input", updateWeightSum);
+
+      // 페이지 로드시 초기 체크
+      $(document).ready(function () {
+        updateWeightSum();
+      });
+
+      function showLoading() {
+        $("#loading-spinner").show();
+      }
+      function hideLoading() {
+        $("#loading-spinner").hide();
+      }
+      // 신축이음 별도 처리 로직 추가
+      (function () {
+        // 기존 generateEvaluationTable 함수 백업
+        const originalGenerateEvaluationTable = window.generateEvaluationTable;
+
+        // 새로운 generateEvaluationTable 함수로 오버라이드
+        window.generateEvaluationTable = function (componentType, data) {
+          const tableElement = document.getElementById(
+            `${componentType}EvaluationTable`
+          );
+          if (!tableElement) return;
+
+          console.log(`${componentType} 상태평가 생성 시작, 데이터:`, data);
+
+          let tableHtml = "";
+          // 부재별 테이블 헤더 생성
+          switch (componentType) {
+            case "slab":
+              tableHtml = generateSlabTableHeader();
+              break;
+            case "girder":
+              tableHtml = generateGirderTableHeader();
+              break;
+            case "crossbeam":
+              tableHtml = generateCrossbeamTableHeader();
+              break;
+            case "abutment":
+              tableHtml = generateAbutmentTableHeader();
+              break;
+            case "pier":
+              tableHtml = generatePierTableHeader();
+              break;
+            case "foundation":
+              tableHtml = generateFoundationTableHeader();
+              break;
+            case "bearing":
+              tableHtml = generateBearingTableHeader();
+              break;
+            case "expansionJoint":
+              tableHtml = generateExpansionJointTableHeader();
+              break;
+            case "pavement":
+              tableHtml = generatePavementTableHeader();
+              break;
+            case "drainage":
+              tableHtml = generateDrainageTableHeader();
+              break;
+            case "railing":
+              tableHtml = generateRailingTableHeader();
+              break;
+          }
+
+          tableHtml += "<tbody>";
+
+          // 사용자 입력 면적 기본값 100
+          const defaultInspectionArea = 100;
+
+          // 신축이음의 경우 별도 처리
+          if (componentType === "expansionJoint") {
+            console.log(
+              "신축이음 별도 처리 시작, 신축이음 위치:",
+              bridgeData.expansionJointLocations
+            );
+
+            // 신축이음 위치 데이터를 직접 사용
+            const expansionLocations = bridgeData.expansionJointLocations
+              ? bridgeData.expansionJointLocations
+                  .split(",")
+                  .map((loc) => loc.trim().toUpperCase())
+                  .filter((loc) => loc)
+              : [];
+
+            console.log("파싱된 신축이음 위치 배열:", expansionLocations);
+
+            if (expansionLocations.length > 0) {
+              expansionLocations.forEach((location) => {
+                console.log(`신축이음 위치 ${location}에 대한 행 생성`);
+                // 대소문자 구분없이 매칭
+                const spanDamageData = data.filter
+                  ? data.filter(
+                      (d) => d.span_id.toUpperCase() === location.toUpperCase()
+                    )
+                  : [];
+
+                if (spanDamageData.length > 0) {
+                  console.log(
+                    `실제 데이터 있음: ${location}`,
+                    spanDamageData[0]
+                  );
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    location,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  console.log(`데이터 없음, 기본 행 생성: ${location}`);
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    location,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            } else {
+              // 신축이음 위치 정보가 없으면 기본 A1, A2 생성
+              console.log("신축이음 위치 정보 없음, 기본 A1, A2 행 생성");
+              ["A1", "A2"].forEach((location) => {
+                const spanDamageData = data.filter
+                  ? data.filter((d) => d.span_id.toUpperCase() === location)
+                  : [];
+
+                if (spanDamageData.length > 0) {
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    location,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    location,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            }
+          }
+          // 교량받침의 경우 별도 처리
+          else if (componentType === "bearing") {
+            console.log("교량받침 별도 처리 시작");
+
+            if (bridgeData.spans && bridgeData.spans.length > 0) {
+              bridgeData.spans.forEach((span) => {
+                if (span.id.startsWith("A") || span.id.startsWith("P")) {
+                  const spanDamageData = data.filter
+                    ? data.filter((d) => d.span_id === span.id)
+                    : [];
+
+                  if (spanDamageData.length > 0) {
+                    console.log(
+                      `교량받침 실제 데이터 있음: ${span.id}`,
+                      spanDamageData[0]
+                    );
+                    tableHtml += generateTableRowFromData(
+                      componentType,
+                      span.id,
+                      spanDamageData[0],
+                      defaultInspectionArea
+                    );
+                  } else {
+                    console.log(
+                      `교량받침 데이터 없음, 기본 행 생성: ${span.id}`
+                    );
+                    tableHtml += generateEmptyTableRow(
+                      componentType,
+                      span.id,
+                      defaultInspectionArea
+                    );
+                  }
+                }
+              });
+            } else {
+              // 기본 교량받침 위치 생성
+              const defaultBearingSpans = ["A1", "P1", "A2"];
+              defaultBearingSpans.forEach((spanId) => {
+                const spanDamageData = data.filter
+                  ? data.filter((d) => d.span_id === spanId)
+                  : [];
+                if (spanDamageData.length > 0) {
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    spanId,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    spanId,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            }
+          }
+          // 교면포장, 배수시설, 난간 및 연석은 경간(S1, S2, S3...)에 대해 생성
+          else if (
+            componentType === "pavement" ||
+            componentType === "drainage" ||
+            componentType === "railing"
+          ) {
+            console.log(`${componentType} 별도 처리 시작`);
+
+            if (bridgeData.spans && bridgeData.spans.length > 0) {
+              bridgeData.spans.forEach((span) => {
+                if (span.id.startsWith("S")) {
+                  const spanDamageData = data.filter
+                    ? data.filter((d) => d.span_id === span.id)
+                    : [];
+
+                  if (spanDamageData.length > 0) {
+                    console.log(
+                      `${componentType} 실제 데이터 있음: ${span.id}`,
+                      spanDamageData[0]
+                    );
+                    tableHtml += generateTableRowFromData(
+                      componentType,
+                      span.id,
+                      spanDamageData[0],
+                      defaultInspectionArea
+                    );
+                  } else {
+                    console.log(
+                      `${componentType} 데이터 없음, 기본 행 생성: ${span.id}`
+                    );
+                    tableHtml += generateEmptyTableRow(
+                      componentType,
+                      span.id,
+                      defaultInspectionArea
+                    );
+                  }
+                }
+              });
+            } else {
+              // 기본 경간 생성
+              const defaultSpans = ["S1", "S2", "S3"];
+              defaultSpans.forEach((spanId) => {
+                const spanDamageData = data.filter
+                  ? data.filter((d) => d.span_id === spanId)
+                  : [];
+                if (spanDamageData.length > 0) {
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    spanId,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    spanId,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            }
+          }
+          // 다른 부재들은 기존 로직 사용
+          else {
+            // 원래 함수를 호출하되, 신축이음이 아닌 경우에만
+            if (originalGenerateEvaluationTable) {
+              originalGenerateEvaluationTable.call(this, componentType, data);
+              return;
+            }
+
+            // 원래 함수가 없는 경우 기본 처리
+            if (bridgeData.spans && bridgeData.spans.length > 0) {
+              bridgeData.spans.forEach((span) => {
+                // 해당 부재에 맞는 경간만 출력
+                let valid = false;
+                if (componentType === "bearing") {
+                  valid = span.id.startsWith("A") || span.id.startsWith("P");
+                } else if (
+                  componentType === "slab" ||
+                  componentType === "girder" ||
+                  componentType === "crossbeam" ||
+                  componentType === "pavement" ||
+                  componentType === "drainage" ||
+                  componentType === "railing"
+                ) {
+                  valid = span.id.startsWith("S");
+                } else if (componentType === "abutment") {
+                  valid = span.id.startsWith("A");
+                } else if (componentType === "pier") {
+                  valid = span.id.startsWith("P");
+                } else if (componentType === "foundation") {
+                  valid = span.id.startsWith("A") || span.id.startsWith("P");
+                }
+
+                if (!valid) return;
+
+                const spanDamageData = data.filter
+                  ? data.filter((d) => d.span_id === span.id)
+                  : [];
+
+                if (spanDamageData.length > 0) {
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    span.id,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    span.id,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            } else {
+              const defaultSpans = ["S1", "S2", "S3"];
+              defaultSpans.forEach((spanId) => {
+                const spanDamageData = data.filter
+                  ? data.filter((d) => d.span_id === spanId)
+                  : [];
+                if (spanDamageData.length > 0) {
+                  tableHtml += generateTableRowFromData(
+                    componentType,
+                    spanId,
+                    spanDamageData[0],
+                    defaultInspectionArea
+                  );
+                } else {
+                  tableHtml += generateEmptyTableRow(
+                    componentType,
+                    spanId,
+                    defaultInspectionArea
+                  );
+                }
+              });
+            }
+          }
+
+          tableHtml += "</tbody>";
+          tableElement.innerHTML = tableHtml;
+
+          console.log(`${componentType} 상태평가 생성 완료`);
+        };
+
+        console.log("신축이음 별도 처리 로직이 적용되었습니다.");
+      })();
+
+      // 페이지 로드 시 구조형식 옵션을 API에서 가져오기
+      $(document).ready(function () {
+        loadStructureTypes();
+
+        // 기존 코드...
+      });
+
+      function loadStructureTypes() {
+        $.ajax({
+          url: "/api/meta_keyword",
+          method: "GET",
+          data: { meta_id: 200078 },
+          success: function (response) {
+            const structureSelect = $("#structureType");
+
+            // 기존 옵션 제거 (기본 "구조형식 선택" 제외)
+            structureSelect.find("option:not(:first)").remove();
+
+            // API 응답에서 옵션 추가
+            if (response && response.keywords) {
+              response.keywords.forEach(function (keyword) {
+                structureSelect.append(
+                  `<option value="${keyword.keyword}">${keyword.keyword}</option>`
+                );
+              });
+            } else if (response && Array.isArray(response)) {
+              // 응답이 배열인 경우
+              response.forEach(function (keyword) {
+                structureSelect.append(
+                  `<option value="${keyword.keyword}">${keyword.keyword}</option>`
+                );
+              });
+            }
+
+            // 기본값 설정 (PSC BOX가 있으면 선택)
+            if (structureSelect.find('option[value="PSC BOX"]').length > 0) {
+              structureSelect.val("PSC BOX").trigger("change");
+            }
+
+            console.log("구조형식 옵션 로드 완료");
+          },
+          error: function (xhr, status, error) {
+            console.error("구조형식 옵션 로드 실패:", error);
+            // 에러 시 기본 옵션 유지
+          },
+        });
+      }
+    </script>
+    {% endblock %}
+  </div>
+</div>

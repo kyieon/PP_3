@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}파일 데이터 보기 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-file-alt"></i> 파일 데이터 보기
+                        <a href="{{ url_for('admin.admin_files') }}" class="btn btn-secondary btn-sm float-end">
+                            <i class="fas fa-arrow-left"></i> 파일 목록으로
+                        </a>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- 파일 정보 -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> 파일 정보</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="30%">파일명:</th>
+                                            <td>{{ stats.file_info.filename }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>교량명:</th>
+                                            <td>{{ stats.file_info.bridge_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>업로드 사용자:</th>
+                                            <td>{{ stats.file_info.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>업로드 날짜:</th>
+                                            <td>{{ stats.file_info.upload_date }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> 데이터 통계</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="30%">총 행 수:</th>
+                                            <td><span class="badge bg-primary">{{ stats.total_rows }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>총 컬럼 수:</th>
+                                            <td><span class="badge bg-success">{{ stats.total_columns }}</span></td>
+                                        </tr>
+                                        {% if stats.component_info %}
+                                        <tr>
+                                            <th>원본 부재명 수:</th>
+                                            <td><span class="badge bg-info">{{ stats.component_info.unique_components }}</span></td>
+                                        </tr>
+                                        {% if stats.component_info.has_normalized_component %}
+                                        <tr>
+                                            <th>정규화 부재명 수:</th>
+                                            <td><span class="badge bg-warning">{{ stats.component_info.unique_normalized_components }}</span></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endif %}
+                                        <tr>
+                                            <th>컬럼 목록:</th>
+                                            <td>
+                                                {% for column in stats.ordered_columns or stats.columns %}
+                                                    {% if column in ['원본부재명', '부재명', '정규화부재명'] %}
+                                                        <span class="badge bg-primary me-1">{{ column }}</span>
+                                                    {% elif column == '부재위치' %}
+                                                        <span class="badge bg-info me-1">{{ column }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary me-1">{{ column }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 부재명 정규화 정보 -->
+                    {% if stats.component_info and stats.component_info.has_normalized_component %}
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-cogs"></i> 부재명 정규화 정보</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="text-center">
+                                                <h5 class="text-primary">{{ stats.component_info.unique_components }}</h5>
+                                                <small class="text-muted">원본 부재명 종류</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="text-center">
+                                                <h5 class="text-warning">{{ stats.component_info.unique_normalized_components }}</h5>
+                                                <small class="text-muted">정규화 부재명 종류</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="text-center">
+                                                <h5 class="text-success">
+                                                    {% if stats.component_info.unique_components > 0 %}
+                                                        {{ ((stats.component_info.unique_components - stats.component_info.unique_normalized_components) / stats.component_info.unique_components * 100) | round(1) }}%
+                                                    {% else %}
+                                                        0%
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">정규화 효율</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="text-center">
+                                                {% if stats.component_info.has_position %}
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                    <small class="text-muted">부재위치 포함</small>
+                                                {% else %}
+                                                    <i class="fas fa-times-circle text-warning"></i>
+                                                    <small class="text-muted">부재위치 없음</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            정규화를 통해 {{ stats.component_info.unique_components }}개의 서로 다른 부재명이 {{ stats.component_info.unique_normalized_components }}개로 통합되었습니다.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 데이터 테이블 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-table"></i> 데이터 테이블
+                                <small class="text-muted">(최대 1000행까지 표시)</small>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                {{ table_html|safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#file-data-table {
+    font-size: 12px;
+}
+
+#file-data-table th {
+    background-color: #343a40 !important;
+    color: white !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-color: #454d55 !important;
+}
+
+#file-data-table td, #file-data-table th {
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid #dee2e6;
+}
+
+#file-data-table td:hover {
+    white-space: normal;
+    overflow: visible;
+    background-color: #f0f8ff !important;
+}
+
+#file-data-table th:hover {
+    background-color: #495057 !important;
+    color: white !important;
+}
+
+#file-data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+/* 테이블 전체 스타일 개선 */
+#file-data-table {
+    margin-bottom: 0;
+}
+
+#file-data-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#file-data-table tbody tr:nth-child(odd) {
+    background-color: white;
+}
+
+/* 부재명 관련 컬럼 강조 */
+#file-data-table th:nth-child(2),
+#file-data-table th:nth-child(3),
+#file-data-table th:nth-child(4),
+#file-data-table th:nth-child(5) {
+    background-color: #1e3a5f !important;
+    color: #ffc107 !important;
+}
+
+#file-data-table td:nth-child(2),
+#file-data-table td:nth-child(3),
+#file-data-table td:nth-child(4),
+#file-data-table td:nth-child(5) {
+    font-weight: 500;
+    background-color: #fff3cd !important;
+}
+
+#file-data-table td:nth-child(2):hover,
+#file-data-table td:nth-child(3):hover,
+#file-data-table td:nth-child(4):hover,
+#file-data-table td:nth-child(5):hover {
+    background-color: #fff3cd !important;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // 테이블 셀 클릭 시 전체 내용 보기
+    $('#file-data-table td').click(function() {
+        var content = $(this).text();
+        if (content.length > 20) {
+            alert('전체 내용:\n\n' + content);
+        }
+    });
+
+    // 테이블 정렬 기능 추가 (선택사항)
+    if (typeof DataTable !== 'undefined') {
+        $('#file-data-table').DataTable({
+            "pageLength": 50,
+            "scrollX": true,
+            "scrollY": "400px",
+            "scrollCollapse": true,
+            "order": [],
+            "columnDefs": [
+                { "orderable": false, "targets": '_all' }
+            ]
+        });
+    }
+});
+</script>
+{% endblock %}

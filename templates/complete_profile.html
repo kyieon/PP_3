@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>구글 로그인 신규 회원가입</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        margin: 60px auto;
+      }
+      h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #34495e;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #34495e;
+      }
+      .terms-container {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #555;
+      }
+      .terms-container a {
+        color: #2c3e50;
+        text-decoration: none;
+      }
+      .terms-container a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>추가 정보 입력</h2>
+      <form method="POST">
+        <div class="form-group">
+          <label for="username">이름</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            value="{{ username|default('') }}"
+          />
+        </div>
+        <div class="form-group">
+          <label for="company">회사명</label>
+          <input
+            type="text"
+            id="company"
+            name="company"
+            required
+            value="{{ company|default('') }}"
+          />
+        </div>
+
+        <div class="form-group terms-container" style="margin-bottom: 20px">
+
+
+
+            <label
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            "
+            ><span>
+              <span>(필수)</span>
+              <a href="https://home.infrasmart.co.kr/tos.php" target="_blank"
+              >이용약관</a
+            >
+              <span>에 동의합니다.</span>
+            </span>
+            <input
+              type="checkbox"
+              id="terms-agree"
+              name="terms-agree"
+              required
+              style="vertical-align: middle; width: 50px"
+            />
+          </label>
+
+
+          </label>
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            "
+            ><span>
+              <span>(필수)</span>
+              <a href="https://home.infrasmart.co.kr/person.php" target="_blank"
+                >개인정보 처리방침</a
+              >
+              <span>에 동의합니다.</span>
+            </span>
+            <input
+              type="checkbox"
+              id="privacy-agree"
+              name="privacy-agree"
+              required
+              style="vertical-align: middle; width: 50px"
+            />
+          </label>
+        </div>
+        <button type="submit">저장하고 시작하기</button>
+      </form>
+    </div>
+  </body>
+</html>

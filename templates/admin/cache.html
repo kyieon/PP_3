@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}캐시 관리{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>🔄 손상 대책방안 캐시 관리</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>캐시 통계</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td><strong>캐시된 항목 수</strong></td>
+                            <td>{{ stats.total_entries }}개</td>
+                        </tr>
+                        <tr>
+                            <td><strong>캐시 파일</strong></td>
+                            <td>{{ stats.cache_file }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>파일 존재 여부</strong></td>
+                            <td>
+                                {% if stats.file_exists %}
+                                    <span class="badge bg-success">존재함</span>
+                                {% else %}
+                                    <span class="badge bg-warning">존재하지 않음</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>캐시 관리</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        캐시를 초기화하면 모든 저장된 손상 대책방안이 삭제되고, 
+                        다음 요청 시 다시 생성됩니다.
+                    </p>
+                    <form method="POST" action="{{ url_for('admin.clear_cache') }}" 
+                          onsubmit="return confirm('정말로 캐시를 초기화하시겠습니까?')">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> 캐시 초기화
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>캐시 시스템 정보</h5>
+                </div>
+                <div class="card-body">
+                    <h6>캐시 시스템의 장점:</h6>
+                    <ul>
+                        <li><strong>속도 향상</strong>: 한 번 생성된 손상 대책방안은 캐시에서 즉시 조회</li>
+                        <li><strong>API 비용 절약</strong>: GPT API 호출 횟수 대폭 감소</li>
+                        <li><strong>일관성 보장</strong>: 동일한 손상 유형에 대해 항상 같은 대책방안 제공</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">캐시 작동 방식:</h6>
+                    <ol>
+                        <li>손상 유형 + 부재명 + 보수방안 조합으로 고유 키 생성</li>
+                        <li>캐시에 해당 조합이 있으면 즉시 반환</li>
+                        <li>없으면 RAG 시스템으로 생성 후 캐시에 저장</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

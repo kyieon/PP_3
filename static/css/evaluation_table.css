@@ -1,0 +1,109 @@
+.evaluation-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.evaluation-table th, 
+.evaluation-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.evaluation-table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.evaluation-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* 등급별 색상 */
+.evaluation-table .grade-a {
+    background-color: #d4edda;
+}
+
+.evaluation-table .grade-b {
+    background-color: #fff3cd;
+}
+
+.evaluation-table .grade-c {
+    background-color: #ffe5d0;
+}
+
+.evaluation-table .grade-d {
+    background-color: #f8d7da;
+}
+
+.evaluation-table .grade-e {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* 인쇄 스타일 */
+@media print {
+    .card {
+        border: 1px solid #dee2e6 !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        padding: 10px 15px !important;
+        font-weight: bold !important;
+        color: #000 !important;
+    }
+    
+    .card-body {
+        padding: 15px !important;
+    }
+    
+    .evaluation-table th, 
+    .evaluation-table td {
+        padding: 6px 4px !important;
+        font-size: 10px !important;
+    }
+    
+    .evaluation-table .grade-a {
+        background-color: #eee !important;
+    }
+    
+    .evaluation-table .grade-b {
+        background-color: #ddd !important;
+    }
+    
+    .evaluation-table .grade-c {
+        background-color: #ccc !important;
+    }
+    
+    .evaluation-table .grade-d {
+        background-color: #bbb !important;
+    }
+    
+    .evaluation-table .grade-e {
+        background-color: #aaa !important;
+        color: #000 !important;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    @page {
+        size: landscape;
+        margin: 1cm;
+    }
+}

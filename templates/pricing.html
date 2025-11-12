@@ -1,0 +1,213 @@
+{% extends "base.html" %} {% block title %}Pricing - InfraSmart{% endblock %} {%
+block content %}
+<div class="pricing-container">
+  <h1>Choose Your Plan</h1>
+
+  <div class="pricing-cards">
+    <div class="pricing-card">
+      <div class="card-header">
+        <h2>Plus</h2>
+        <div class="price">₩19,900<span>/month</span></div>
+      </div>
+      <div class="card-body">
+        <ul class="features">
+          <li><i class="check-icon">✓</i> 한달 무제한 사용</li>
+          <li><i class="check-icon">✓</i> 부재별 집계표 생성</li>
+          <li><i class="check-icon">✓</i> 외관조사 결과 생성</li>
+          <li><i class="check-icon">✓</i> 외관조사 총괄표 생성</li>
+          <li><i class="check-icon">✓</i> 보수물량표 생성</li>
+          <li><i class="check-icon">✓</i> 개략공사비표 생성</li>
+          <li class="empty-feature"></li>
+          <li class="empty-feature"></li>
+          <li class="empty-feature"></li>
+        </ul>
+        <a href="{{ url_for('auth.signup') }}" class="select-plan-btn"
+          >Select Plan</a
+        >
+      </div>
+    </div>
+
+    <div class="pricing-card">
+      <div class="card-header">
+        <h2>Pro</h2>
+        <div class="price">₩39,900<span>/month</span></div>
+      </div>
+      <div class="card-body">
+        <ul class="features">
+          <li><i class="check-icon">✓</i> 한달 무제한 사용</li>
+          <li><i class="check-icon">✓</i> 부재별 집계표 생성</li>
+          <li><i class="check-icon">✓</i> 외관조사 결과 생성</li>
+          <li><i class="check-icon">✓</i> 외관조사 총괄표 생성</li>
+          <li><i class="check-icon">✓</i> 보수물량표 생성</li>
+          <li><i class="check-icon">✓</i> 개략공사비표 생성</li>
+          <li><i class="check-icon">✓</i> 상태평가 생성</li>
+          <li><i class="check-icon">✓</i> AI 서비스 이용 가능</li>
+          <li class="feature-desc">(부재별 손상원인 및 대책방안 생성)</li>
+        </ul>
+        <a href="{{ url_for('auth.signup') }}" class="select-plan-btn"
+          >Select Plan</a
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-section">
+    <h3>프로그램 문의</h3>
+    <p>더 자세한 정보가 필요하시면 아래 연락처로 문의해주세요.</p>
+    <div class="contact-info">
+      <p>Email: support@infrasmart.com</p>
+      <p>Phone: 02-1234-5678</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pricing-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+  }
+
+  .pricing-cards {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+
+  .pricing-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-header {
+    background: #2c3e50;
+    color: white;
+    padding: 30px;
+    text-align: center;
+  }
+
+  .card-header h2 {
+    margin: 0;
+    font-size: 1.8em;
+  }
+
+  .price {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  .price span {
+    font-size: 0.5em;
+    font-weight: normal;
+  }
+
+  .card-body {
+    padding: 30px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+    flex: 1;
+  }
+
+  .features li {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+  }
+
+  .empty-feature {
+    visibility: hidden;
+  }
+
+  .check-icon {
+    color: #2c3e50;
+    margin-right: 10px;
+    font-weight: bold;
+    min-width: 20px;
+  }
+
+  .feature-desc {
+    font-size: 0.9em;
+    color: #666;
+    margin-left: 25px;
+    margin-top: -10px;
+  }
+
+  .select-plan-btn {
+    display: block;
+    text-align: center;
+    background: #2c3e50;
+    color: white;
+    padding: 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-top: auto;
+  }
+
+  .select-plan-btn:hover {
+    background: #34495e;
+  }
+
+  .contact-section {
+    text-align: center;
+    margin-top: 50px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 10px;
+  }
+
+  .contact-section h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  .contact-info {
+    margin-top: 20px;
+  }
+
+  .contact-info p {
+    margin: 10px 0;
+    color: #666;
+  }
+
+  @media (max-width: 768px) {
+    .pricing-cards {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .pricing-card {
+      width: 100%;
+      max-width: 350px;
+    }
+  }
+</style>
+{% endblock %}

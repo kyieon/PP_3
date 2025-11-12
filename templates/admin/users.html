@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}사용자 관리{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>사용자 관리</h2>
+
+            <!-- 탭 네비게이션 -->
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_home') }}">메타데이터</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin.admin_users') }}">사용자 관리</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_files') }}">파일 관리</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.admin_settings') }}">설정</a>
+                </li>
+            </ul>
+
+            <!-- 사용자 목록 테이블 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>등록된 사용자 목록</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>사용자명</th>
+                                    <th>이메일</th>
+                                    <th>가입일</th>
+                                    <th>활성화</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- JavaScript로 동적 로딩 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 사용자 수정 모달 -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">사용자 정보 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">사용자명</label>
+                        <input type="text" class="form-control" id="editUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">이메일</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editIsActive">
+                            <label class="form-check-label" for="editIsActive">
+                                계정 활성화
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 페이지 로딩 시 사용자 목록 불러오기
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+});
+
+function loadUsers() {
+    fetch('/admin/api/users')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayUsers(data.users);
+            } else {
+                alert('사용자 목록을 불러오는데 실패했습니다: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('사용자 목록을 불러오는데 실패했습니다.');
+        });
+}
+
+function displayUsers(users) {
+    const tbody = document.querySelector('#usersTable tbody');
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user[0]}</td>
+            <td>${user[1]}</td>
+            <td>${user[2]}</td>
+            <td>${new Date(user[3]).toLocaleDateString()}</td>
+            <td>
+                <span class="badge ${user[4] ? 'bg-success' : 'bg-danger'}">
+                    ${user[4] ? '활성' : '비활성'}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editUser(${user[0]}, '${user[1]}', '${user[2]}', ${user[4]})">
+                    수정
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser(${user[0]})">
+                    삭제
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function editUser(id, username, email, isActive) {
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUsername').value = username;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editIsActive').checked = isActive;
+
+    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+}
+
+function updateUser() {
+    const id = document.getElementById('editUserId').value;
+    const username = document.getElementById('editUsername').value;
+    const email = document.getElementById('editEmail').value;
+    const isActive = document.getElementById('editIsActive').checked;
+
+    fetch(`/admin/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username: username,
+            email: email,
+            is_active: isActive
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('사용자 정보가 수정되었습니다.');
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            loadUsers();
+        } else {
+            alert('수정에 실패했습니다: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('수정에 실패했습니다.');
+    });
+}
+
+function deleteUser(id) {
+    if (confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
+        fetch(`/admin/api/users/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('사용자가 삭제되었습니다.');
+                loadUsers();
+            } else {
+                alert('삭제에 실패했습니다: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제에 실패했습니다.');
+        });
+    }
+}
+</script>
+{% endblock %}
